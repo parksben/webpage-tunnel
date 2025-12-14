@@ -1,5 +1,5 @@
-import { nanoid } from "nanoid/non-secure";
-import type { Message, MessageType, RequestMethod, RequestOptions } from "./types";
+import { nanoid } from 'nanoid/non-secure';
+import type { Message, MessageType, RequestMethod, RequestOptions } from './types';
 
 /**
  * Generate unique ID for messages
@@ -33,7 +33,7 @@ export class Request {
 
     // Setup message listener
     this.handleMessage = this.handleMessage.bind(this);
-    window.addEventListener("message", this.handleMessage);
+    window.addEventListener('message', this.handleMessage);
 
     // Dynamically add methods to the instance
     for (const method of options.methods) {
@@ -52,7 +52,7 @@ export class Request {
       const urlObj = new URL(url);
       return urlObj.origin;
     } catch {
-      return "*";
+      return '*';
     }
   }
 
@@ -65,7 +65,7 @@ export class Request {
       try {
         // Try to access parent's origin (will throw if cross-origin)
         const parentOrigin = this.extractOrigin(document.referrer || this.server);
-        if (parentOrigin === this.targetOrigin || this.targetOrigin === "*") {
+        if (parentOrigin === this.targetOrigin || this.targetOrigin === '*') {
           this.targetWindow = window.parent;
           await this.handshake();
           return;
@@ -76,16 +76,16 @@ export class Request {
     }
 
     // Search for iframe with matching src
-    const iframes = document.querySelectorAll("iframe");
+    const iframes = document.querySelectorAll('iframe');
     for (const iframe of Array.from(iframes)) {
       if (iframe.src?.startsWith(this.server)) {
         // Check if iframe is already loaded
-        const isLoaded = iframe.contentDocument?.readyState === "complete";
+        const isLoaded = iframe.contentDocument?.readyState === 'complete';
 
         if (!isLoaded) {
           await new Promise<void>((resolve) => {
             iframe.addEventListener(
-              "load",
+              'load',
               () => {
                 resolve();
               },
@@ -106,7 +106,7 @@ export class Request {
         this.targetWindow = iframe.contentWindow;
 
         if (!this.targetWindow) {
-          throw new Error("Failed to get iframe contentWindow");
+          throw new Error('Failed to get iframe contentWindow');
         }
 
         await this.handshake();
@@ -140,7 +140,7 @@ export class Request {
       const id = generateId();
       const timer = window.setTimeout(() => {
         this.pendingRequests.delete(id);
-        reject(new Error("Handshake timeout"));
+        reject(new Error('Handshake timeout'));
       }, this.timeout);
 
       this.pendingRequests.set(id, {
@@ -154,14 +154,14 @@ export class Request {
 
       // Send handshake message
       if (!this.targetWindow) {
-        reject(new Error("Target window is null"));
+        reject(new Error('Target window is null'));
         return;
       }
 
       try {
         this.targetWindow.postMessage(
           {
-            type: "WEBPAGE_TUNNEL_HANDSHAKE",
+            type: 'WEBPAGE_TUNNEL_HANDSHAKE',
             id,
           },
           this.targetOrigin
@@ -177,14 +177,14 @@ export class Request {
    */
   private handleMessage(event: MessageEvent): void {
     // Verify origin if specified
-    if (this.targetOrigin !== "*" && event.origin !== this.targetOrigin) {
+    if (this.targetOrigin !== '*' && event.origin !== this.targetOrigin) {
       return;
     }
 
     const message = event.data as Message;
 
     // Handle handshake acknowledgment
-    if (message.type === ("WEBPAGE_TUNNEL_HANDSHAKE_ACK" as MessageType)) {
+    if (message.type === ('WEBPAGE_TUNNEL_HANDSHAKE_ACK' as MessageType)) {
       const pending = this.pendingRequests.get(message.id);
       if (pending) {
         clearTimeout(pending.timer);
@@ -195,7 +195,7 @@ export class Request {
     }
 
     // Handle response
-    if (message.type === ("WEBPAGE_TUNNEL_RESPONSE" as MessageType)) {
+    if (message.type === ('WEBPAGE_TUNNEL_RESPONSE' as MessageType)) {
       const pending = this.pendingRequests.get(message.id);
       if (pending) {
         clearTimeout(pending.timer);
@@ -242,7 +242,7 @@ export class Request {
 
         this.targetWindow?.postMessage(
           {
-            type: "WEBPAGE_TUNNEL_REQUEST",
+            type: 'WEBPAGE_TUNNEL_REQUEST',
             id,
             method,
             params,
@@ -257,14 +257,14 @@ export class Request {
    * Destroy the request instance and cleanup resources
    */
   destroy(): void {
-    window.removeEventListener("message", this.handleMessage);
+    window.removeEventListener('message', this.handleMessage);
 
     // Clear all pending requests silently
     for (const [, pending] of this.pendingRequests.entries()) {
       clearTimeout(pending.timer);
       // Silently reject to avoid unhandled promise rejection errors
       try {
-        pending.reject(new Error("Request cancelled"));
+        pending.reject(new Error('Request cancelled'));
       } catch {
         // Ignore errors during cleanup
       }

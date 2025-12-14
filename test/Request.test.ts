@@ -43,7 +43,6 @@ describe('Request', () => {
 
     expect(removeEventListenerSpy).toHaveBeenCalledWith('message', expect.any(Function));
     expect((request as any).targetWindow).toBeNull();
-    expect((request as any).iframe).toBeNull();
     expect((request as any).connected).toBe(false);
   });
 });

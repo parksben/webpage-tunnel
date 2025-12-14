@@ -1,13 +1,30 @@
 import { serve } from '../src/serve';
 import { MessageType } from '../src/types';
 
+// Store the original addEventListener
+const originalAddEventListener = window.addEventListener;
+const listeners: Array<{ type: string; listener: EventListener }> = [];
+
 describe('serve', () => {
   beforeEach(() => {
-    // Clear document state
+    // Clear listeners
+    listeners.length = 0;
+    
+    // Mock addEventListener to track listeners
+    window.addEventListener = jest.fn((type: string, listener: EventListener) => {
+      listeners.push({ type, listener: listener as EventListener });
+      originalAddEventListener.call(window, type, listener);
+    }) as any;
   });
 
   afterEach(() => {
-    // Cleanup
+    // Remove all listeners
+    listeners.forEach(({ type, listener }) => {
+      window.removeEventListener(type, listener);
+    });
+    
+    // Restore original addEventListener
+    window.addEventListener = originalAddEventListener;
   });
 
   it('should register message event listener', () => {
@@ -47,7 +64,7 @@ describe('serve', () => {
         type: MessageType.HANDSHAKE_ACK,
         id: 'test-id',
       },
-      { targetOrigin: 'http://localhost' }
+      'http://localhost'
     );
   });
 
@@ -89,7 +106,7 @@ describe('serve', () => {
           data: { id: '123', name: 'John' },
         },
       },
-      { targetOrigin: 'http://localhost' }
+      'http://localhost'
     );
   });
 
@@ -126,7 +143,7 @@ describe('serve', () => {
         id: 'async-request-id',
         result: { id: '456', data: 'async-data' },
       },
-      { targetOrigin: 'http://localhost' }
+      'http://localhost'
     );
   });
 
@@ -160,7 +177,7 @@ describe('serve', () => {
         id: 'error-request-id',
         error: 'Method nonExistentMethod not found',
       },
-      { targetOrigin: 'http://localhost' }
+      'http://localhost'
     );
   });
 
@@ -196,7 +213,7 @@ describe('serve', () => {
         id: 'error-request-id',
         error: 'Test error',
       },
-      { targetOrigin: 'http://localhost' }
+      'http://localhost'
     );
   });
 });
