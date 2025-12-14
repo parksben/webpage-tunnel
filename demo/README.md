@@ -1,5 +1,7 @@
 # Chat Demo
 
+![Chat Demo](./screenshot.png)
+
 A simple bidirectional chat application demonstrating cross-origin communication between two web pages using `webpage-tunnel`.
 
 ## What This Demo Shows
@@ -10,42 +12,14 @@ A simple bidirectional chat application demonstrating cross-origin communication
 
 ## Quick Start
 
-Build the project and start the demo server:
+1. Start the demo server:
 
 ```bash
-npm run build
-cd demo
 node server.js
 ```
 
-Open http://localhost:3001 in your browser. You'll see:
+2. Open http://localhost:3001 in your browser. You'll see:
 - **Left side**: User A's chat interface
 - **Right side**: User B's chat interface (embedded via iframe)
 
-Type messages in either side and hit "Send" to see real-time communication in action.
-
-## How It Works
-
-Both User A and User B use the same pattern:
-
-```javascript
-// Create API client to call the other side's methods
-const api = new Request({
-  server: 'http://localhost:3002',  // Target page URL
-  methods: ['receiveMessage'],       // Methods to call
-  timeout: 5000
-});
-
-// Expose methods for the other side to call
-serve({
-  receiveMessage: ({ message }) => {
-    displayMessage(message);
-    return { success: true };
-  }
-});
-
-// Send a message
-await api.receiveMessage({ message: 'Hello!' });
-```
-
-That's it! The library handles all the complexity of cross-origin iframe communication.
+3. Type messages in either side and hit "Send" to see real-time communication in action.
