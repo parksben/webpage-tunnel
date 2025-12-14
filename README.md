@@ -1,7 +1,7 @@
 # Webpage Tunnel
 
 [![npm version](https://img.shields.io/npm/v/webpage-tunnel.svg)](https://www.npmjs.com/package/webpage-tunnel)
-[![license](https://img.shields.io/npm/l/webpage-tunnel.svg)](https://github.com/yourusername/webpage-tunnel/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/webpage-tunnel.svg)](https://github.com/parksben/webpage-tunnel/blob/main/LICENSE)
 [![downloads](https://img.shields.io/npm/dm/webpage-tunnel.svg)](https://www.npmjs.com/package/webpage-tunnel)
 
 ![Webpage Tunnel](./logo.svg)

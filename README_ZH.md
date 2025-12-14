@@ -1,9 +1,5 @@
 # Webpage Tunnel
 
-[![npm version](https://img.shields.io/npm/v/webpage-tunnel.svg)](https://www.npmjs.com/package/webpage-tunnel)
-[![npm downloads](https://img.shields.io/npm/dm/webpage-tunnel.svg)](https://www.npmjs.com/package/webpage-tunnel)
-[![license](https://img.shields.io/npm/l/webpage-tunnel.svg)](https://www.npmjs.com/package/webpage-tunnel)
-
 ![Webpage Tunnel](./logo.svg)
 
 一个浏览器端轻量级框架，用于安全、高效地实现 iframe 内嵌网页与宿主页面间的 API 式通信。
