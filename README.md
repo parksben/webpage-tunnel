@@ -1,14 +1,16 @@
-# webpage-tunnel
+# Webpage Tunnel
 
 [![npm version](https://img.shields.io/npm/v/webpage-tunnel.svg)](https://www.npmjs.com/package/webpage-tunnel)
 [![license](https://img.shields.io/npm/l/webpage-tunnel.svg)](https://github.com/yourusername/webpage-tunnel/blob/main/LICENSE)
 [![downloads](https://img.shields.io/npm/dm/webpage-tunnel.svg)](https://www.npmjs.com/package/webpage-tunnel)
 
+![Webpage Tunnel](./logo.svg)
+
+[中文文档](./README_ZH.md)
+
 > A secure and elegant cross-iframe API communication library based on `postMessage`.
 
 `webpage-tunnel` enables seamless, type-safe API calls between parent pages and iframes, eliminating the complexity of `postMessage` protocol handling. With just a few lines of code, you can establish a communication tunnel between pages.
-
-[中文文档](./README_ZH.md)
 
 ## Use Cases
 
@@ -40,75 +42,135 @@ yarn add webpage-tunnel
 pnpm add webpage-tunnel
 ```
 
-**CDN:**
+**CDN for Browser:**
 
 ```html
 <script src="https://unpkg.com/webpage-tunnel/dist/webpage-tunnel.umd.js"></script>
+<script>
+  const { serve, Request } = window.WebpageTunnel;
+</script>
+```
+
+**CDN for ES Module:**
+
+```html
+<script type="module">
+import { serve, Request } from 'https://unpkg.com/webpage-tunnel/dist/webpage-tunnel.esm.js';
+</script>
 ```
 
 ## Quick Start
 
-### Basic Usage
+### 1. Embed Page
 
-**Page A (Service Provider):**
+Use iframe to embed Page A into Page B:
+
+```html
+<!-- Page B HTML -->
+<iframe src="https://a.com/profile"></iframe>
+```
+
+Alternatively, you can use iframe to embed Page B into Page A:
+
+```html
+<!-- Page A HTML -->
+<iframe src="https://b.com/dashboard"></iframe>
+```
+
+The `webpage-tunnel` framework works correctly in both scenarios.
+
+### 2. Expose Page API
+
+Use the `serve()` method in Page A to expose APIs (with types):
 
 ```typescript
+// Page A: profile page (https://a.com/profile)
 import { serve } from 'webpage-tunnel';
 
+interface ApiResponse<T> {
+  status: number;
+  message: string;
+  data?: T;
+}
+
+interface RequestParams { userId: string }
+interface UserInfo { id: string; name: string; email: string; avatar: string }
+interface PlayListItem { id: string; title: string; cover: string }
+
+// Expose API methods using serve()
 serve({
-  // Define API methods
-  async getUser(params: { id: string }) {
-    return { id: params.id, name: 'Alice' };
+  getUserInfo: async ({ userId }: RequestParams): Promise<ApiResponse<UserInfo>> => {
+    const { data } = await fetch(`/api/user/${userId}/info`).then(res => res.json());
+    return {
+      status: 1,
+      message: 'Success',
+      data: {
+        id: userId,
+        name: data.name,
+        email: data.email,
+        avatar: data.avatar,
+      },
+    };
   },
-  
-  async updateUser(params: { id: string; name: string }) {
-    return { success: true };
-  }
+  getPlayList: async ({ userId }: RequestParams): Promise<ApiResponse<PlayListItem[]>> => {
+    const { data } = await fetch(`/api/user/${userId}/playList`).then(res => res.json());
+    if (Array.isArray(data) && data.length > 0) {
+      return { status: 1, message: 'Success', data };
+    }
+    return { status: 0, message: 'Play list is empty', data: [] };
+  },
 });
 ```
 
-**Page B (API Caller):**
+### 3. Call Page API
+
+Use a `Request` instance in Page B to call the APIs exposed in Page A (with generics):
 
 ```typescript
+// Page B: dashboard page (https://b.com/dashboard)
 import { Request } from 'webpage-tunnel';
 
+// Reuse types from above: ApiResponse, RequestParams, UserInfo, PlayListItem
+
 // Create Request instance
-const api = new Request({
-  server: 'https://example.com/page-a',
-  methods: ['getUser', 'updateUser'],
-  timeout: 5000  // Optional: default 30000ms
+const userApi = new Request({
+  server: 'https://a.com/profile',              // Target page URL
+  methods: ['getUserInfo', 'getPlayList'],      // List of API methods to call
+  timeout: 10 * 1000,                           // Optional: request timeout (ms)
 });
 
+// Define request parameters
+const params: RequestParams = { userId: '123' };
+
 // Call API methods
-const user = await api.getUser({ id: '123' });
-console.log(user);  // { id: '123', name: 'Alice' }
+userApi
+  .getUserInfo<RequestParams, ApiResponse<UserInfo>>(params)
+  .then(({ data }) => {
+    console.log('User Info:', data);
+  })
+  .catch((error) => {
+    console.error(error);
+  });
 
-await api.updateUser({ id: '123', name: 'Bob' });
-
-// Cleanup when done
-api.destroy();
+userApi
+  .getPlayList<RequestParams, ApiResponse<PlayListItem[]>>(params)
+  .then(({ data }) => {
+    console.log('Play List:', data);
+  })
+  .catch((error) => {
+    console.error(error);
+  });
 ```
 
 ### Demo Example
 
 The project includes a complete bidirectional communication demo:
 
-```bash
-cd demo
-npm install
-npm start
-```
-
-Then open:
-- User A: http://localhost:3001
-- User B: http://localhost:3002
-
-This demo shows two pages communicating in real-time through `webpage-tunnel`.
+[View Demo](https://yourusername.github.io/webpage-tunnel/demo/)
 
 ## API Reference
 
-<details>
-<summary><h3 style="display: inline;">serve(methods)</h3></summary>
+### serve(methods)
 
 Expose API methods to allow other pages to call them.
 
@@ -156,12 +218,9 @@ serve({
 - Methods receive a single `params` object parameter
 - Methods can return any JSON-serializable value
 
-</details>
-
 ---
 
-<details>
-<summary><h3 style="display: inline;">Request</h3></summary>
+### Request
 
 Create an API client to call remote page methods.
 
@@ -210,12 +269,9 @@ const result = await api.updateUser({ id: '123', name: 'John' });
 api.destroy();
 ```
 
-</details>
-
 ---
 
-<details>
-<summary><h3 style="display: inline;">Type Definitions</h3></summary>
+### Type Definitions
 
 #### `ApiHandler<P, R>`
 
@@ -261,12 +317,9 @@ interface Message<T = any> {
 }
 ```
 
-</details>
-
 ---
 
-<details>
-<summary><h3 style="display: inline;">Error Handling</h3></summary>
+### Error Handling
 
 All methods called through Request return Promises, so you can use `try-catch` or `.catch()` to handle errors:
 
@@ -296,7 +349,7 @@ try {
 }
 ```
 
-</details>
+---
 
 ## Technical Overview
 
@@ -328,8 +381,7 @@ sequenceDiagram
 
 ## Best Practices
 
-<details>
-<summary><h3 style="display: inline;">1. Type Safety</h3></summary>
+### 1. Type Safety
 
 Use TypeScript and define explicit types for API methods
 
@@ -340,12 +392,9 @@ interface UserResponse { id: string; name: string }
 const user = await api.getUser<GetUserParams, UserResponse>({ id: '123' });
 ```
 
-</details>
-
 ---
 
-<details>
-<summary><h3 style="display: inline;">2. Error Handling</h3></summary>
+### 2. Error Handling
 
 Always add error handling for API calls
 
@@ -361,12 +410,9 @@ serve({
 });
 ```
 
-</details>
-
 ---
 
-<details>
-<summary><h3 style="display: inline;">3. Resource Cleanup</h3></summary>
+### 3. Resource Cleanup
 
 Call `destroy()` promptly when no longer needed
 
@@ -377,12 +423,9 @@ componentWillUnmount() {
 }
 ```
 
-</details>
-
 ---
 
-<details>
-<summary><h3 style="display: inline;">4. Timeout Configuration</h3></summary>
+### 4. Timeout Configuration
 
 Set timeout appropriately based on network conditions
 
@@ -394,7 +437,7 @@ const api = new Request({
 });
 ```
 
-</details>
+---
 
 ## License
 

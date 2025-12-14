@@ -4,6 +4,8 @@
 [![npm downloads](https://img.shields.io/npm/dm/webpage-tunnel.svg)](https://www.npmjs.com/package/webpage-tunnel)
 [![license](https://img.shields.io/npm/l/webpage-tunnel.svg)](https://www.npmjs.com/package/webpage-tunnel)
 
+![Webpage Tunnel](./logo.svg)
+
 一个浏览器端轻量级框架，用于安全、高效地实现 iframe 内嵌网页与宿主页面间的 API 式通信。
 
 ## 适用场景
@@ -22,10 +24,14 @@
 NPM
 
 ```bash
-npm i webpage-tunnel
+npm install webpage-tunnel
+# or
+yarn add webpage-tunnel
+# or
+pnpm add webpage-tunnel
 ```
 
-CDN for Browser
+**CDN for Browser:**
 
 ```html
 <script src="https://unpkg.com/webpage-tunnel/dist/webpage-tunnel.umd.js"></script>
@@ -34,7 +40,7 @@ CDN for Browser
 </script>
 ```
 
-CDN for ES Module
+**CDN for ES Module:**
 
 ```html
 <script type="module">
@@ -67,6 +73,7 @@ import { serve, Request } from 'https://unpkg.com/webpage-tunnel/dist/webpage-tu
 在 网页A 中使用 `serve()` 方法封装 API（含类型）
 
 ```typescript
+// Page A: profile page (https://a.com/profile)
 import { serve } from 'webpage-tunnel';
 
 interface ApiResponse<T> {
@@ -109,6 +116,7 @@ serve({
 在 网页B 中使用 `Request` 实例来调用 网页A 中封装的 API（含泛型）
 
 ```typescript
+// Page B: dashboard page (https://b.com/dashboard)
 import { Request } from 'webpage-tunnel';
 
 // 复用上文的类型：ApiResponse、RequestParams、UserInfo、PlayListItem
@@ -145,8 +153,7 @@ userApi
 
 ## API Reference
 
-<details>
-<summary><h3 style="display: inline;">serve(methods)</h3></summary>
+### serve(methods)
 
 将当前网页的功能封装为 API，供其他页面通过 `Request` 调用。
 
@@ -189,12 +196,9 @@ serve({
 });
 ```
 
-</details>
-
 ---
 
-<details>
-<summary><h3 style="display: inline;">new Request(options)</h3></summary>
+### new Request(options)
 
 创建一个请求客户端实例，用于调用其他页面通过 `serve()` 封装的 API。
 
@@ -243,12 +247,9 @@ const result = await api.updateUser({ id: '123', name: 'John' });
 api.destroy();
 ```
 
-</details>
-
 ---
 
-<details>
-<summary><h3 style="display: inline;">类型定义</h3></summary>
+### 类型定义
 
 #### `ApiHandler<P, R>`
 
@@ -294,12 +295,9 @@ interface Message<T = any> {
 }
 ```
 
-</details>
-
 ---
 
-<details>
-<summary><h3 style="display: inline;">错误处理</h3></summary>
+### 错误处理
 
 所有通过 Request 调用的方法都返回 Promise，可以使用 `try-catch` 或 `.catch()` 捕获错误：
 
@@ -329,7 +327,7 @@ try {
 }
 ```
 
-</details>
+---
 
 ## 技术原理
 
@@ -361,8 +359,7 @@ sequenceDiagram
 
 ## 最佳实践
 
-<details>
-<summary><h3 style="display: inline;">1. 类型安全</h3></summary>
+### 1. 类型安全
 
 使用 TypeScript 并为 API 方法定义明确的类型
 
@@ -373,12 +370,9 @@ interface UserResponse { id: string; name: string }
 const user = await api.getUser<GetUserParams, UserResponse>({ id: '123' });
 ```
 
-</details>
-
 ---
 
-<details>
-<summary><h3 style="display: inline;">2. 错误处理</h3></summary>
+### 2. 错误处理
 
 始终为 API 调用添加错误处理
 
@@ -394,12 +388,9 @@ serve({
 });
 ```
 
-</details>
-
 ---
 
-<details>
-<summary><h3 style="display: inline;">3. 资源清理</h3></summary>
+### 3. 资源清理
 
 在不需要时及时调用 `destroy()` 清理资源
 
@@ -410,12 +401,9 @@ componentWillUnmount() {
 }
 ```
 
-</details>
-
 ---
 
-<details>
-<summary><h3 style="display: inline;">4. 超时配置</h3></summary>
+### 4. 超时配置
 
 根据实际网络情况合理设置超时时间
 
@@ -427,7 +415,7 @@ const api = new Request({
 });
 ```
 
-</details>
+---
 
 ## License
 
