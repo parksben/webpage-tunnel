@@ -1,12 +1,26 @@
+<p align="center">
+  <img src="logo.svg" width="80%">
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/webpage-tunnel">
+    <img src="https://img.shields.io/npm/v/webpage-tunnel?style=flat-square&label=Version" alt="npm version">
+  </a>
+  <a href="https://github.com/parksben/webpage-tunnel/stargazers">
+    <img alt="GitHub stars" src="https://img.shields.io/github/stars/parksben/webpage-tunnel?style=flat-square&label=Stars">
+  </a>
+  <a href="https://github.com/parksben/webpage-tunnel/network/members">
+    <img alt="GitHub forks" src="https://img.shields.io/github/forks/parksben/webpage-tunnel?style=flat-square&label=Forks">
+  </a>
+  <a href="https://github.com/parksben/webpage-tunnel/blob/main/LICENSE">
+    <img alt="License" src="https://img.shields.io/github/license/parksben/webpage-tunnel?style=flat-square">
+  </a>
+</p>
+
+<p align="center">English | <a href="README_ZH.md">简体中文</a></p>
+
+
 # Webpage Tunnel
-
-[![npm version](https://img.shields.io/npm/v/webpage-tunnel.svg)](https://www.npmjs.com/package/webpage-tunnel)
-[![license](https://img.shields.io/npm/l/webpage-tunnel.svg)](https://github.com/parksben/webpage-tunnel/blob/main/LICENSE)
-[![downloads](https://img.shields.io/npm/dm/webpage-tunnel.svg)](https://www.npmjs.com/package/webpage-tunnel)
-
-![Webpage Tunnel](./logo.svg)
-
-[中文文档](./README_ZH.md)
 
 > A secure and elegant cross-iframe API communication library based on `postMessage`.
 
@@ -176,9 +190,9 @@ Expose API methods to allow other pages to call them.
 
 **Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `methods` | `Record<string, ApiHandler>` | ✅ | Object containing API methods |
+| Parameter | Type                         | Required | Description                   |
+| --------- | ---------------------------- | -------- | ----------------------------- |
+| `methods` | `Record<string, ApiHandler>` | ✅        | Object containing API methods |
 
 **ApiHandler Type:**
 
@@ -226,20 +240,20 @@ Create an API client to call remote page methods.
 
 **Constructor Parameters:**
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `options.server` | `string` | ✅ | - | Target page URL (must include protocol and domain) |
-| `options.methods` | `string[]` | ✅ | - | List of API method names to call |
-| `options.timeout` | `number` | ❌ | `30000` | Request timeout in milliseconds |
+| Parameter         | Type       | Required | Default | Description                                        |
+| ----------------- | ---------- | -------- | ------- | -------------------------------------------------- |
+| `options.server`  | `string`   | ✅        | -       | Target page URL (must include protocol and domain) |
+| `options.methods` | `string[]` | ✅        | -       | List of API method names to call                   |
+| `options.timeout` | `number`   | ❌        | `30000` | Request timeout in milliseconds                    |
 
 **Instance Methods:**
 
 Request instances dynamically add methods based on `options.methods`. Each method returns a `Promise`.
 
-| Method | Description |
-|--------|-------------|
+| Method                                       | Description                               |
+| -------------------------------------------- | ----------------------------------------- |
 | `[methodName]<P, R>(params?: P): Promise<R>` | Call remote API with generic type support |
-| `destroy(): void` | Destroy instance and cleanup resources |
+| `destroy(): void`                            | Destroy instance and cleanup resources    |
 
 **Example:**
 
@@ -281,10 +295,10 @@ API handler function type.
 type ApiHandler<P = any, R = any> = (params: P) => R | Promise<R>
 ```
 
-| Generic Parameter | Description |
-|-------------------|-------------|
-| `P` | Parameter type |
-| `R` | Return type |
+| Generic Parameter | Description    |
+| ----------------- | -------------- |
+| `P`               | Parameter type |
+| `R`               | Return type    |
 
 ---
 
@@ -325,12 +339,12 @@ All methods called through Request return Promises, so you can use `try-catch` o
 
 **Common Errors:**
 
-| Error Message | Description | Solution |
-|---------------|-------------|----------|
-| `Handshake timeout` | Connection timeout with target page | Check if target page loads correctly and calls `serve()` |
-| `Request timeout: [method]` | API call timeout | Increase `timeout` or optimize server response |
-| `Method [method] not found` | Called method not registered on server | Confirm method is defined in `serve()` |
-| `Request cancelled` | Request cancelled (usually by calling `destroy()`) | Normal behavior, no action needed |
+| Error Message               | Description                                        | Solution                                                 |
+| --------------------------- | -------------------------------------------------- | -------------------------------------------------------- |
+| `Handshake timeout`         | Connection timeout with target page                | Check if target page loads correctly and calls `serve()` |
+| `Request timeout: [method]` | API call timeout                                   | Increase `timeout` or optimize server response           |
+| `Method [method] not found` | Called method not registered on server             | Confirm method is defined in `serve()`                   |
+| `Request cancelled`         | Request cancelled (usually by calling `destroy()`) | Normal behavior, no action needed                        |
 
 **Example:**
 

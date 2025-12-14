@@ -1,10 +1,25 @@
+<p align="center">
+  <img src="logo.svg" width="80%">
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/webpage-tunnel">
+    <img src="https://img.shields.io/npm/v/webpage-tunnel?style=flat-square&label=Version" alt="npm version">
+  </a>
+  <a href="https://github.com/parksben/webpage-tunnel/stargazers">
+    <img alt="GitHub stars" src="https://img.shields.io/github/stars/parksben/webpage-tunnel?style=flat-square&label=Stars">
+  </a>
+  <a href="https://github.com/parksben/webpage-tunnel/network/members">
+    <img alt="GitHub forks" src="https://img.shields.io/github/forks/parksben/webpage-tunnel?style=flat-square&label=Forks">
+  </a>
+  <a href="https://github.com/parksben/webpage-tunnel/blob/main/LICENSE">
+    <img alt="License" src="https://img.shields.io/github/license/parksben/webpage-tunnel?style=flat-square">
+  </a>
+</p>
+
+<p align="center"><a href="README.md">English</a> | 简体中文</p>
+
 # Webpage Tunnel
-
-[![npm version](https://img.shields.io/npm/v/webpage-tunnel.svg)](https://www.npmjs.com/package/webpage-tunnel)
-[![license](https://img.shields.io/npm/l/webpage-tunnel.svg)](https://github.com/parksben/webpage-tunnel/blob/main/LICENSE)
-[![downloads](https://img.shields.io/npm/dm/webpage-tunnel.svg)](https://www.npmjs.com/package/webpage-tunnel)
-
-![Webpage Tunnel](./logo.svg)
 
 一个浏览器端轻量级框架，用于安全、高效地实现 iframe 内嵌网页与宿主页面间的 API 式通信。
 
