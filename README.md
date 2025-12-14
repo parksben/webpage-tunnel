@@ -1,232 +1,401 @@
-# Webpage Tunnel
+# webpage-tunnel
 
 [![npm version](https://img.shields.io/npm/v/webpage-tunnel.svg)](https://www.npmjs.com/package/webpage-tunnel)
-[![npm downloads](https://img.shields.io/npm/dm/webpage-tunnel.svg)](https://www.npmjs.com/package/webpage-tunnel)
-[![license](https://img.shields.io/npm/l/webpage-tunnel.svg)](https://www.npmjs.com/package/webpage-tunnel)
+[![license](https://img.shields.io/npm/l/webpage-tunnel.svg)](https://github.com/yourusername/webpage-tunnel/blob/main/LICENSE)
+[![downloads](https://img.shields.io/npm/dm/webpage-tunnel.svg)](https://www.npmjs.com/package/webpage-tunnel)
 
-One efficient framework for implement two-way communication between webpages in browser.
+> A secure and elegant cross-iframe API communication library based on `postMessage`.
 
-## 主要功能
+`webpage-tunnel` enables seamless, type-safe API calls between parent pages and iframes, eliminating the complexity of `postMessage` protocol handling. With just a few lines of code, you can establish a communication tunnel between pages.
 
-1. 不同页面间的双向通信：
+[中文文档](./README_ZH.md)
 
-* 网页即服务（Webpage as Service）：通过工厂函数 `serve()` 将网页中的功能、逻辑封装为可远程调用的 API
-* 远程过程调用（Remote Procedure Call）：通过工具类 `Request` 实现 API 的远程调用
-* 通过网页间 API 的相互调用可实现不同站点间的双向通信
+## Use Cases
 
-2. 支持流式通信：
+- 🔗 **Micro Frontends**: Communication between micro-applications
+- 📦 **Third-party Integration**: Secure data exchange with embedded third-party pages
+- 🎨 **Visual Editors**: Communication between canvas and preview iframes
+- 💬 **Chat Systems**: Real-time messaging between parent and iframe chat windows
+- 🎮 **Game Embedding**: API calls between game containers and game iframes
 
-* 通过工厂函数 `serveSSE` 实现类似服务器发送事件（Server-Sent Events, SSE）的流式 API
-* 通过工厂类 `RequestSSE` 实现流式 API 的远程调用
+## Features
 
-## 技术原理
+- ✨ **Simple API**: Intuitive `serve()` and `Request` API design
+- 🔒 **Type Safe**: Full TypeScript support with complete type inference
+- ⚡ **High Performance**: Lightweight with no dependencies (~2KB gzipped)
+- 🎯 **Promise-based**: All API calls return Promises
+- 🔧 **Error Handling**: Built-in timeout and error handling
+- 🌐 **Cross-domain Support**: Secure communication across different domains
+- 📦 **Multiple Formats**: Supports UMD, ESM, and CJS
 
-基于浏览器端 postMessage API 实现网页间通信
+## Installation
 
-## Install
-
-NPM
+**NPM:**
 
 ```bash
 npm install webpage-tunnel
+# or
+yarn add webpage-tunnel
+# or
+pnpm add webpage-tunnel
 ```
 
-CDN
+**CDN:**
 
 ```html
 <script src="https://unpkg.com/webpage-tunnel/dist/webpage-tunnel.umd.js"></script>
-<!-- Via global variable `WebpageTunnel` -->
 ```
 
-## QuickStart
+## Quick Start
 
-### 在服务端网页中使用 `provide()` 封装远程 API
+### Basic Usage
+
+**Page A (Service Provider):**
 
 ```typescript
-// user-service.ts for page https://b.com/profile
 import { serve } from 'webpage-tunnel';
 
-interface RequestParams {
-  userId: string
-}
-
 serve({
-  getUserInfo: ({ userId }: RequestParams) => {
-    const dom = document.querySelector('.user-info');
-    if (dom instanceof HTMLElement === false) {
-      return {
-        status: 0,
-        message: 'User info not found',
-      }
-    }
-    return {
-      status: 1,
-      message: 'Success',
-      data: {
-        id: userId,
-        name: dom.querySelector('.name')?.textContent || '',
-        email: dom.querySelector('.email')?.textContent || '',
-        avatar: (dom.querySelector('.avatar') as HTMLImageElement)?.src || '',
-      },
-    }
+  // Define API methods
+  async getUser(params: { id: string }) {
+    return { id: params.id, name: 'Alice' };
   },
-  getPlayList: async ({ userId }: RequestParams) => {
-    const { data } = await fetch(`/api/user/${userId}/playList`).then(res => res.json());
-    if (Array.isArray(data) && data.length > 0) {
-      return {
-        status: 1,
-        message: 'Success',
-        data,
-      }
-    }
-    return {
-      status: 0,
-      message: 'Play list is empty',
-      data: [],
-    }
-  },
-})
+  
+  async updateUser(params: { id: string; name: string }) {
+    return { success: true };
+  }
+});
 ```
 
-### 在客户端网页中使用 `Request` 调用远程 API
+**Page B (API Caller):**
 
 ```typescript
-// user-client.ts for page https://a.com/user-client
 import { Request } from 'webpage-tunnel';
 
-interface UserInfo {
-  id: string
-  name: string
-  email: string
-  avatar: string
-}
-interface PlayListItem {
-  id: string
-  title: string
-  cover: string
-}
-interface ApiResponse<T> {
-  status: number
-  message: string
-  data?: T
-}
-interface RequestParams {
-  userId: string
-}
-
-const userApi = new Request({
-  server: 'https://b.com/profile', // the page where serve is called
-  methods: ['getUserInfo', 'getPlayList'], // specify the methods to be called remotely
-  timeout: 10 * 1000, // the request timeout
+// Create Request instance
+const api = new Request({
+  server: 'https://example.com/page-a',
+  methods: ['getUser', 'updateUser'],
+  timeout: 5000  // Optional: default 30000ms
 });
 
-userApi
-  .getUserInfo<RequestParams, ApiResponse<UserInfo>>(params)
-  .then(({ data }) => {
-    console.log('User Info:', data);
-  })
-  .catch((error) => {
-    console.error(error);
-  })
+// Call API methods
+const user = await api.getUser({ id: '123' });
+console.log(user);  // { id: '123', name: 'Alice' }
 
-userApi
-  .getPlayList<RequestParams, ApiResponse<PlayListItem[]>>(params)
-  .then(({ data }) => {
-    console.log('Play List:', data);
-  })
-  .catch((error) => {
-    console.error(error);
-  })
+await api.updateUser({ id: '123', name: 'Bob' });
+
+// Cleanup when done
+api.destroy();
 ```
 
-### 在服务端网页中使用 `serveSSE()` 封装流式 API
+### Demo Example
+
+The project includes a complete bidirectional communication demo:
+
+```bash
+cd demo
+npm install
+npm start
+```
+
+Then open:
+- User A: http://localhost:3001
+- User B: http://localhost:3002
+
+This demo shows two pages communicating in real-time through `webpage-tunnel`.
+
+## API Reference
+
+<details>
+<summary><h3 style="display: inline;">serve(methods)</h3></summary>
+
+Expose API methods to allow other pages to call them.
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `methods` | `Record<string, ApiHandler>` | ✅ | Object containing API methods |
+
+**ApiHandler Type:**
 
 ```typescript
-// chat-service.ts for page https://b.com/chat
-import { type SSEController, serveSSE } from 'webpage-tunnel';
+type ApiHandler<P = any, R = any> = (params: P) => R | Promise<R>
+```
 
-interface ChatMessage {
-  role: 'user' | 'assistant'
-  content: string
-}
+**Example:**
 
-serveSSE({
-  chat: (messages: ChatMessage[], controller: SSEController) => {
-    const responses = [
-      'Hello! How can I help you?',
-      'I am a chatbot.',
-      'What is your name?',
-      'Nice to meet you!',
-      'Goodbye!',
-    ];
-    let index = 0;
+```typescript
+import { serve } from 'webpage-tunnel';
 
-    const intervalId = setInterval(() => {
-      if (index < responses.length) {
-        controller.enqueue(responses[index]); // trigger onProgress callback in client
-        index += 1;
-      } else {
-        clearInterval(intervalId);
-        controller.close(); // trigger onComplete callback in client
-      }
-    }, 300);
-
-    // Handle cancellation from client
-    return () => {
-      clearInterval(intervalId);
-      controller.cancel();
-    };
+serve({
+  // Synchronous method
+  add(params: { a: number; b: number }) {
+    return params.a + params.b;
   },
-})
+  
+  // Asynchronous method
+  async fetchData(params: { url: string }) {
+    const response = await fetch(params.url);
+    return response.json();
+  },
+  
+  // Method with complex types
+  async processUser(params: { user: User }) {
+    // Process user data
+    return { success: true, user: params.user };
+  }
+});
 ```
 
-### 在客户端网页中使用 `RequestSSE` 调用流式 API
+**Notes:**
+
+- `serve()` should only be called once per page
+- Methods can be synchronous or asynchronous
+- Methods receive a single `params` object parameter
+- Methods can return any JSON-serializable value
+
+</details>
+
+---
+
+<details>
+<summary><h3 style="display: inline;">Request</h3></summary>
+
+Create an API client to call remote page methods.
+
+**Constructor Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `options.server` | `string` | ✅ | - | Target page URL (must include protocol and domain) |
+| `options.methods` | `string[]` | ✅ | - | List of API method names to call |
+| `options.timeout` | `number` | ❌ | `30000` | Request timeout in milliseconds |
+
+**Instance Methods:**
+
+Request instances dynamically add methods based on `options.methods`. Each method returns a `Promise`.
+
+| Method | Description |
+|--------|-------------|
+| `[methodName]<P, R>(params?: P): Promise<R>` | Call remote API with generic type support |
+| `destroy(): void` | Destroy instance and cleanup resources |
+
+**Example:**
 
 ```typescript
-// chat-client.ts for page https://a.com/chat-client
-import { EventType, RequestSSE, SSEEvent } from 'webpage-tunnel';
+import { Request } from 'webpage-tunnel';
 
-interface ChatMessage {
-  role: 'user' | 'assistant'
-  content: string
-}
-
-const chatApi = new RequestSSE({
-  server: 'https://b.com/chat', // the page where serveSSE is called
-  methods: ['chat'], // specify the methods to be called remotely
+// Create Request instance
+const api = new Request({
+  server: 'https://example.com/page',
+  methods: ['getUser', 'updateUser', 'deleteUser'],
+  timeout: 5000
 });
 
-const messages: ChatMessage[] = [
-  { role: 'user', content: 'Hello!' },
-];
-
-const handler = ({ type, data, error }: SSEEvent) => {
-  if (type === EventType.Start) {
-    console.log('Chat started');
-    return;
-  }
-  if (type === EventType.Progress) {
-    console.log('Chat progress:', data);
-    return;
-  }
-  if (type === EventType.Complete) {
-    console.log('Chat completed');
-    return;
-  }
-  if (type === EventType.Cancel) {
-    console.log('Chat cancelled');
-    return;
-  }
-  if (type === EventType.Error) {
-    console.error('Chat error:', error.message);
-    return;
-  }
+// Call method with types
+interface User {
+  id: string;
+  name: string;
 }
 
-const task = chatApi.chat<ChatMessage[], string>(messages, handler);
+const user = await api.getUser<{ id: string }, User>({ id: '123' });
+console.log(user.name);
 
-setTimeout(() => {
-  task.cancel();
-  console.log('Chat cancelled');
-}, 10 * 1000);
+// Call method without types
+const result = await api.updateUser({ id: '123', name: 'John' });
+
+// Destroy instance
+api.destroy();
 ```
+
+</details>
+
+---
+
+<details>
+<summary><h3 style="display: inline;">Type Definitions</h3></summary>
+
+#### `ApiHandler<P, R>`
+
+API handler function type.
+
+```typescript
+type ApiHandler<P = any, R = any> = (params: P) => R | Promise<R>
+```
+
+| Generic Parameter | Description |
+|-------------------|-------------|
+| `P` | Parameter type |
+| `R` | Return type |
+
+---
+
+#### `RequestOptions`
+
+Request constructor configuration options.
+
+```typescript
+interface RequestOptions {
+  server: string;      // Target page URL
+  methods: string[];   // List of API method names
+  timeout?: number;    // Timeout in milliseconds
+}
+```
+
+---
+
+#### `Message<T>`
+
+Internal communication message structure (for advanced users).
+
+```typescript
+interface Message<T = any> {
+  type: MessageType;   // Message type
+  id: string;          // Unique message ID
+  method?: string;     // API method name
+  params?: T;          // Request parameters
+  result?: any;        // Response result
+  error?: string;      // Error message
+}
+```
+
+</details>
+
+---
+
+<details>
+<summary><h3 style="display: inline;">Error Handling</h3></summary>
+
+All methods called through Request return Promises, so you can use `try-catch` or `.catch()` to handle errors:
+
+**Common Errors:**
+
+| Error Message | Description | Solution |
+|---------------|-------------|----------|
+| `Handshake timeout` | Connection timeout with target page | Check if target page loads correctly and calls `serve()` |
+| `Request timeout: [method]` | API call timeout | Increase `timeout` or optimize server response |
+| `Method [method] not found` | Called method not registered on server | Confirm method is defined in `serve()` |
+| `Request cancelled` | Request cancelled (usually by calling `destroy()`) | Normal behavior, no action needed |
+
+**Example:**
+
+```typescript
+try {
+  const data = await api.getData({ id: '123' });
+  console.log(data);
+} catch (error) {
+  if (error.message.includes('timeout')) {
+    console.error('Request timeout, please try again');
+  } else if (error.message.includes('not found')) {
+    console.error('API method not found');
+  } else {
+    console.error('Request failed:', error.message);
+  }
+}
+```
+
+</details>
+
+## Technical Overview
+
+Based on the browser's native `postMessage` mechanism, `webpage-tunnel` establishes a secure communication channel between two pages. Through message passing, it implements method invocation and data exchange, ensuring data security and integrity in cross-domain environments.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as Page B (Caller)
+    participant A as Page A (Server)
+
+    Note over B: Initialize Request({ server, methods, timeout })
+    B->>A: postMessage: Handshake Request (HANDSHAKE)
+    A-->>B: postMessage: Handshake Acknowledgment (HANDSHAKE_ACK)
+    Note over B,A: Channel established, start API calls
+
+    rect rgb(245, 248, 255)
+    B->>A: postMessage: API Request (REQUEST: method, params, id)
+    A->>A: serve(methods)[method](params)
+    A-->>B: postMessage: API Response (RESPONSE: result | error, id)
+    end
+
+    alt Timeout/Error
+      B->>B: Timeout triggered/Error caught (reject)
+    else Success
+      B->>B: Promise resolve, process response data
+    end
+```
+
+## Best Practices
+
+<details>
+<summary><h3 style="display: inline;">1. Type Safety</h3></summary>
+
+Use TypeScript and define explicit types for API methods
+
+```typescript
+interface GetUserParams { id: string }
+interface UserResponse { id: string; name: string }
+
+const user = await api.getUser<GetUserParams, UserResponse>({ id: '123' });
+```
+
+</details>
+
+---
+
+<details>
+<summary><h3 style="display: inline;">2. Error Handling</h3></summary>
+
+Always add error handling for API calls
+
+```typescript
+serve({
+  async getData(params) {
+    try {
+      return await fetchData(params);
+    } catch (error) {
+      return { error: error.message };
+    }
+  }
+});
+```
+
+</details>
+
+---
+
+<details>
+<summary><h3 style="display: inline;">3. Resource Cleanup</h3></summary>
+
+Call `destroy()` promptly when no longer needed
+
+```typescript
+// On component unmount
+componentWillUnmount() {
+  this.api.destroy();
+}
+```
+
+</details>
+
+---
+
+<details>
+<summary><h3 style="display: inline;">4. Timeout Configuration</h3></summary>
+
+Set timeout appropriately based on network conditions
+
+```typescript
+const api = new Request({
+  server: 'https://example.com',
+  methods: ['heavyOperation'],
+  timeout: 60000  // Longer timeout for heavy operations
+});
+```
+
+</details>
+
+## License
+
+[MIT License](./LICENSE)

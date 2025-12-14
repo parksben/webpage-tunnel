@@ -1,0 +1,15 @@
+src
+test
+coverage
+node_modules
+.git
+*.log
+*.map
+demo
+
+# Config files
+tsconfig.json
+jest.config.js
+rollup.config.js
+biome.json
+.gitignore
