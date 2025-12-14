@@ -9,7 +9,7 @@ describe('serve', () => {
   beforeEach(() => {
     // Clear listeners
     listeners.length = 0;
-    
+
     // Mock addEventListener to track listeners
     window.addEventListener = jest.fn((type: string, listener: EventListener) => {
       listeners.push({ type, listener: listener as EventListener });
@@ -19,14 +19,13 @@ describe('serve', () => {
 
   afterEach(() => {
     // Remove all listeners
-    listeners.forEach(({ type, listener }) => {
+    for (const { type, listener } of listeners) {
       window.removeEventListener(type, listener);
-    });
-    
+    }
+
     // Restore original addEventListener
     window.addEventListener = originalAddEventListener;
   });
-
   it('should register message event listener', () => {
     const addEventListenerSpy = jest.spyOn(window, 'addEventListener');
 
