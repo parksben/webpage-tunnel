@@ -1,6 +1,6 @@
 {
   "name": "webpage-tunnel",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "一个浏览器端轻量级框架，用于高效实现 iframe 内嵌网页与宿主页面间的 API 式通信",
   "main": "dist/webpage-tunnel.cjs.js",
   "module": "dist/webpage-tunnel.esm.js",
