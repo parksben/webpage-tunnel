@@ -162,11 +162,11 @@ userApi
   });
 ```
 
-### Demo Example
+### Demo Project
 
 The project includes a complete bidirectional communication demo:
 
-[View Demo](https://yourusername.github.io/webpage-tunnel/demo/)
+[Demo Project](https://github.com/parksben/webpage-tunnel/tree/main/demo)
 
 ## API Reference
 
