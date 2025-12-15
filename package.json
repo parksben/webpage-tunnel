@@ -1,6 +1,6 @@
 {
   "name": "webpage-tunnel",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A secure and elegant cross-iframe API communication library based on `postMessage`.",
   "main": "dist/webpage-tunnel.cjs.js",
   "module": "dist/webpage-tunnel.esm.js",
