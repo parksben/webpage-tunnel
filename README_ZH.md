@@ -166,6 +166,12 @@ userApi
   });
 ```
 
+### Demo Project
+
+The project includes a complete bidirectional communication demo:
+
+[Demo Project](https://github.com/parksben/webpage-tunnel/tree/main/demo)
+
 ## API Reference
 
 ### serve(methods)
@@ -348,29 +354,8 @@ try {
 
 基于浏览器原生的 `postMessage` 机制，`webpage-tunnel` 框架在两个页面间建立安全的通信通道。通过消息传递实现方法调用和数据交换，确保跨域环境下的数据安全性和完整性。
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant B as 页面B（调用方）
-    participant A as 页面A（服务方）
+<img width="907" height="973" alt="image" src="https://github.com/user-attachments/assets/04fcf91f-be5a-40c0-ba25-83be89e6c2e9" />
 
-    Note over B: 初始化 Request({ server, methods, timeout })
-    B->>A: postMessage: 握手请求（HANDSHAKE）
-    A-->>B: postMessage: 握手确认（HANDSHAKE_ACK）
-    Note over B,A: 通道建立，开始 API 调用
-
-    rect rgb(245, 248, 255)
-    B->>A: postMessage: API 请求（REQUEST: method, params, id）
-    A->>A: serve(methods)[method](params)
-    A-->>B: postMessage: API 响应（RESPONSE: result | error, id）
-    end
-
-    alt 超时/异常
-      B->>B: 超时触发/错误捕获（reject）
-    else 成功
-      B->>B: Promise resolve，处理返回数据
-    end
-```
 
 ## 最佳实践
 
