@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": ["node_modules", "dist", "coverage", "demo/pages/webpage-tunnel.js"]
+    "ignore": ["node_modules", "dist", "coverage", "demo/static/webpage-tunnel.js"]
   },
   "formatter": {
     "enabled": true,
