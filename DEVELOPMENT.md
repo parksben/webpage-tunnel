@@ -48,3 +48,29 @@ webpage-tunnel/
 │   └── *.d.ts        # TypeScript declarations
 └── package.json
 ```
+
+## Technical Principles
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as Page B (Caller)
+    participant A as Page A (Server)
+
+    Note over B: Initialize Request({ server, methods, timeout })
+    B->>A: postMessage: Handshake Request (HANDSHAKE)
+    A-->>B: postMessage: Handshake Acknowledgment (HANDSHAKE_ACK)
+    Note over B,A: Channel established, start API calls
+
+    rect rgb(245, 248, 255)
+    B->>A: postMessage: API Request (REQUEST: method, params, id)
+    A->>A: serve(methods)[method](params)
+    A-->>B: postMessage: API Response (RESPONSE: result | error, id)
+    end
+
+    alt Timeout/Error
+      B->>B: Timeout triggered/Error caught (reject)
+    else Success
+      B->>B: Promise resolve, process response data
+    end
+```
