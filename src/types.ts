@@ -41,6 +41,12 @@ export interface RequestOptions {
   server: string;
   methods: string[];
   timeout?: number;
+  /**
+   * Optional target window for multiple matching iframes.
+   * If specified, only this specific window will be targeted.
+   * If omitted, all matching iframes will receive the request (broadcast).
+   */
+  targetWindow?: Window;
 }
 
 /**

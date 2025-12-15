@@ -12,6 +12,9 @@
   <a href="https://github.com/parksben/webpage-tunnel/network/members">
     <img alt="GitHub forks" src="https://img.shields.io/github/forks/parksben/webpage-tunnel?style=flat-square&label=Forks">
   </a>
+  <a href="https://www.npmjs.com/package/webpage-tunnel">
+    <img alt="npm downloads" src="https://img.shields.io/npm/dw/webpage-tunnel?style=flat-square&label=Downloads">
+  </a>
   <a href="https://github.com/parksben/webpage-tunnel/blob/main/LICENSE">
     <img alt="License" src="https://img.shields.io/github/license/parksben/webpage-tunnel?style=flat-square">
   </a>
@@ -56,7 +59,7 @@ yarn add webpage-tunnel
 pnpm add webpage-tunnel
 ```
 
-**CDN for Browser:**
+**CDN(UMD):**
 
 ```html
 <script src="https://unpkg.com/webpage-tunnel/dist/webpage-tunnel.umd.js"></script>
@@ -65,7 +68,7 @@ pnpm add webpage-tunnel
 </script>
 ```
 
-**CDN for ES Module:**
+**CDN(ESM):**
 
 ```html
 <script type="module">
@@ -91,7 +94,15 @@ Alternatively, you can use iframe to embed Page B into Page A:
 <iframe src="https://b.com/dashboard"></iframe>
 ```
 
-The `webpage-tunnel` framework works correctly in both scenarios.
+You can also embed both Page A and Page B into the same host page:
+
+```html
+<!-- Host Page HTML -->
+<iframe src="https://a.com/profile"></iframe>
+<iframe src="https://b.com/dashboard"></iframe>
+```
+
+The `webpage-tunnel` framework works correctly in all three scenarios.
 
 ### 2. Expose Page API
 
@@ -112,7 +123,7 @@ interface UserInfo { id: string; name: string; email: string; avatar: string }
 interface PlayListItem { id: string; title: string; cover: string }
 
 // Expose API methods using serve()
-serve({
+const cleanup = serve({
   getUserInfo: async ({ userId }: RequestParams): Promise<ApiResponse<UserInfo>> => {
     const { data } = await fetch(`/api/user/${userId}/info`).then(res => res.json());
     return {
@@ -133,6 +144,11 @@ serve({
     }
     return { status: 0, message: 'Play list is empty', data: [] };
   },
+});
+
+// Clean up when page unloads
+window.addEventListener('beforeunload', () => {
+  cleanup();
 });
 ```
 
@@ -174,6 +190,11 @@ userApi
   .catch((error) => {
     console.error(error);
   });
+  
+// Destroy Request instance when page unloads
+window.addEventListener('beforeunload', () => {
+  userApi.destroy();
+});
 ```
 
 ### Demo Project
@@ -193,6 +214,17 @@ Expose API methods to allow other pages to call them.
 | Parameter | Type                         | Required | Description                   |
 | --------- | ---------------------------- | -------- | ----------------------------- |
 | `methods` | `Record<string, ApiHandler>` | ✅        | Object containing API methods |
+
+**Return Value:**
+
+`serve()` returns a cleanup function that removes the message event listener:
+
+```typescript
+const cleanup = serve(methods);
+
+// Later, when you need to stop listening for messages
+cleanup();  // Removes the message event listener
+```
 
 **ApiHandler Type:**
 
@@ -221,6 +253,17 @@ serve({
   async processUser(params: { user: User }) {
     // Process user data
     return { success: true, user: params.user };
+
+  -**Return Value:**
+  -
+  -`serve()` returns a cleanup function that removes the message event listener:
+  -
+  -```typescript
+  -const cleanup = serve(methods);
+  -
+  -// Later, when you need to stop listening for messages
+  -cleanup();  // Removes the message event listener
+  -```
   }
 });
 ```
@@ -231,6 +274,7 @@ serve({
 - Methods can be synchronous or asynchronous
 - Methods receive a single `params` object parameter
 - Methods can return any JSON-serializable value
+- The cleanup function should be called when unloading the page or when no longer needed
 
 ---
 
@@ -240,11 +284,12 @@ Create an API client to call remote page methods.
 
 **Constructor Parameters:**
 
-| Parameter         | Type       | Required | Default | Description                                        |
-| ----------------- | ---------- | -------- | ------- | -------------------------------------------------- |
-| `options.server`  | `string`   | ✅        | -       | Target page URL (must include protocol and domain) |
-| `options.methods` | `string[]` | ✅        | -       | List of API method names to call                   |
-| `options.timeout` | `number`   | ❌        | `30000` | Request timeout in milliseconds                    |
+| Parameter           | Type       | Required | Default | Description                                                                                  |
+| ------------------- | ---------- | -------- | ------- | -------------------------------------------------------------------------------------------- |
+| `options.server`    | `string`   | ✅        | -       | Target page URL (must include protocol and domain)                                           |
+| `options.methods`   | `string[]` | ✅        | -       | List of API method names to call                                                             |
+| `options.timeout`   | `number`   | ❌        | `30000` | Request timeout in milliseconds                                                              |
+| `options.targetWindow` | `Window`   | ❌        | -       | Specific target window for multiple matching iframes. If omitted, broadcasts to all matching iframes |
 
 **Instance Methods:**
 
@@ -260,11 +305,19 @@ Request instances dynamically add methods based on `options.methods`. Each metho
 ```typescript
 import { Request } from 'webpage-tunnel';
 
-// Create Request instance
+// Create Request instance (broadcast to all matching iframes)
 const api = new Request({
   server: 'https://example.com/page',
   methods: ['getUser', 'updateUser', 'deleteUser'],
   timeout: 5000
+});
+
+// Create Request instance targeting a specific iframe
+const iframe = document.querySelector('iframe');
+const apiSpecific = new Request({
+  server: 'https://example.com/page',
+  methods: ['getUser', 'updateUser', 'deleteUser'],
+  targetWindow: iframe?.contentWindow || undefined
 });
 
 // Call method with types
@@ -308,9 +361,10 @@ Request constructor configuration options.
 
 ```typescript
 interface RequestOptions {
-  server: string;      // Target page URL
-  methods: string[];   // List of API method names
-  timeout?: number;    // Timeout in milliseconds
+  server: string;        // Target page URL
+  methods: string[];     // List of API method names
+  timeout?: number;      // Timeout in milliseconds
+  targetWindow?: Window; // Specific target window (optional)
 }
 ```
 
@@ -373,7 +427,41 @@ Based on the browser's native `postMessage` mechanism, `webpage-tunnel` establis
 
 ## Best Practices
 
-### 1. Type Safety
+### 1. Resource Cleanup with serve()
+
+Always store and call the cleanup function returned by `serve()` when the page unloads
+
+```typescript
+// Store the cleanup function
+const cleanup = serve({
+  getUserInfo: async (params) => {
+    // Implementation
+  },
+  getPlayList: async (params) => {
+    // Implementation
+  }
+});
+
+// Call cleanup when page unloads or service is no longer needed
+window.addEventListener('beforeunload', () => {
+  cleanup();  // Removes the message event listener
+});
+
+// Or in a cleanup function (React/Vue)
+onUnmounted(() => {
+  cleanup();
+});
+```
+
+**Why this matters:**
+
+- Prevents memory leaks by removing event listeners
+- Ensures proper resource management in single-page applications
+- Avoids potential issues when pages are reloaded or navigated away
+
+---
+
+### 2. Type Safety
 
 Use TypeScript and define explicit types for API methods
 
@@ -386,7 +474,7 @@ const user = await api.getUser<GetUserParams, UserResponse>({ id: '123' });
 
 ---
 
-### 2. Error Handling
+### 3. Error Handling
 
 Always add error handling for API calls
 
@@ -404,9 +492,9 @@ serve({
 
 ---
 
-### 3. Resource Cleanup
+### 4. Resource Cleanup in Request
 
-Call `destroy()` promptly when no longer needed
+Call `destroy()` promptly when Request instances are no longer needed
 
 ```typescript
 // On component unmount
@@ -417,7 +505,7 @@ componentWillUnmount() {
 
 ---
 
-### 4. Timeout Configuration
+### 5. Timeout Configuration
 
 Set timeout appropriately based on network conditions
 

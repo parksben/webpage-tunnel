@@ -12,6 +12,9 @@
   <a href="https://github.com/parksben/webpage-tunnel/network/members">
     <img alt="GitHub forks" src="https://img.shields.io/github/forks/parksben/webpage-tunnel?style=flat-square&label=Forks">
   </a>
+  <a href="https://www.npmjs.com/package/webpage-tunnel">
+    <img alt="npm downloads" src="https://img.shields.io/npm/dw/webpage-tunnel?style=flat-square&label=Downloads">
+  </a>
   <a href="https://github.com/parksben/webpage-tunnel/blob/main/LICENSE">
     <img alt="License" src="https://img.shields.io/github/license/parksben/webpage-tunnel?style=flat-square">
   </a>
@@ -34,9 +37,9 @@
 * API 调用：通过框架提供的 `Request` 工具类，可快速实现对网页 API 的快速调用
 * 双向通信：支持两个页面相互调用对方的 API，实现双向通信
 
-## Install
+## 安装
 
-NPM
+**NPM:**
 
 ```bash
 npm install webpage-tunnel
@@ -46,7 +49,7 @@ yarn add webpage-tunnel
 pnpm add webpage-tunnel
 ```
 
-**CDN for Browser:**
+**CDN(UMD):**
 
 ```html
 <script src="https://unpkg.com/webpage-tunnel/dist/webpage-tunnel.umd.js"></script>
@@ -55,7 +58,7 @@ pnpm add webpage-tunnel
 </script>
 ```
 
-**CDN for ES Module:**
+**CDN(ESM):**
 
 ```html
 <script type="module">
@@ -63,7 +66,7 @@ import { serve, Request } from 'https://unpkg.com/webpage-tunnel/dist/webpage-tu
 </script>
 ```
 
-## QuickStart
+## 快速开始
 
 ### 1. 嵌入网页
 
@@ -81,7 +84,15 @@ import { serve, Request } from 'https://unpkg.com/webpage-tunnel/dist/webpage-tu
 <iframe src="https://b.com/dashboard"></iframe>
 ```
 
-两种情况下 `webpage-tunnel` 框架均可正常工作。
+还可以将 网页A 和 网页B 同时嵌入到同一个宿主页面中：
+
+```html
+<!-- 宿主页面的 HTML -->
+<iframe src="https://a.com/profile"></iframe>
+<iframe src="https://b.com/dashboard"></iframe>
+```
+
+以上三种情况下 `webpage-tunnel` 框架均可正常工作。
 
 ### 2. 封装网页 API
 
@@ -102,7 +113,7 @@ interface UserInfo { id: string; name: string; email: string; avatar: string }
 interface PlayListItem { id: string; title: string; cover: string }
 
 // 使用 serve() 封装 API 方法
-serve({
+const cleanup = serve({
   getUserInfo: async ({ userId }: RequestParams): Promise<ApiResponse<UserInfo>> => {
     const { data } = await fetch(`/api/user/${userId}/info`).then(res => res.json());
     return {
@@ -123,6 +134,11 @@ serve({
     }
     return { status: 0, message: 'Play list is empty', data: [] };
   },
+});
+
+// 页面卸载时清理监听器
+window.addEventListener('beforeunload', () => {
+  cleanup();
 });
 ```
 
@@ -164,6 +180,11 @@ userApi
   .catch((error) => {
     console.error(error);
   });
+  
+// 页面卸载时销毁 Request 实例
+window.addEventListener('beforeunload', () => {
+  userApi.destroy();
+});
 ```
 
 ### 进阶 Demo
@@ -172,7 +193,7 @@ userApi
 
 [示例项目](https://github.com/parksben/webpage-tunnel/tree/main/demo)
 
-## API Reference
+## API 参考
 
 ### serve(methods)
 
@@ -181,6 +202,17 @@ userApi
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | `methods` | `ApiMethods` | ✅ | API 方法集合，键为方法名，值为处理函数 |
+
+**返回值：**
+
+`serve()` 会返回一个用于移除消息事件监听器的清理函数：
+
+```typescript
+const cleanup = serve(methods);
+
+// 当不再需要对外提供 API 或页面卸载时调用
+cleanup(); // 移除 message 事件监听器
+```
 
 **ApiMethods 类型定义：**
 
@@ -230,6 +262,7 @@ serve({
 | `options.server` | `string` | ✅ | - | 目标页面的 URL（必须包含协议和域名） |
 | `options.methods` | `string[]` | ✅ | - | 要调用的 API 方法名列表 |
 | `options.timeout` | `number` | ❌ | `30000` | 请求超时时间（毫秒） |
+| `options.targetWindow` | `Window` | ❌ | - | 指定目标窗口（用于多个匹配 iframe 的场景）。若不指定，则广播到所有匹配的 iframe |
 
 **实例方法：**
 
@@ -245,11 +278,19 @@ Request 实例会根据 `options.methods` 动态添加对应的方法。每个�
 ```typescript
 import { Request } from 'webpage-tunnel';
 
-// 创建请求实例
+// 创建请求实例（广播到所有匹配的 iframe）
 const api = new Request({
   server: 'https://example.com/page',
   methods: ['getUser', 'updateUser', 'deleteUser'],
   timeout: 5000
+});
+
+// 创建请求实例（指定特定的 iframe）
+const iframe = document.querySelector('iframe');
+const apiSpecific = new Request({
+  server: 'https://example.com/page',
+  methods: ['getUser', 'updateUser', 'deleteUser'],
+  targetWindow: iframe?.contentWindow || undefined
 });
 
 // 调用方法（带类型）
@@ -293,9 +334,10 @@ Request 构造函数配置选项。
 
 ```typescript
 interface RequestOptions {
-  server: string;      // 目标页面 URL
-  methods: string[];   // API 方法名列表
-  timeout?: number;    // 超时时间（毫秒）
+  server: string;        // 目标页面 URL
+  methods: string[];     // API 方法名列表
+  timeout?: number;      // 超时时间（毫秒）
+  targetWindow?: Window; // 指定目标窗口（可选）
 }
 ```
 
@@ -359,7 +401,40 @@ try {
 
 ## 最佳实践
 
-### 1. 类型安全
+### 1. 使用 serve() 的资源清理
+
+务必保存并在合适的时机调用 `serve()` 返回的清理函数。
+
+```typescript
+// 保存清理函数
+const cleanup = serve({
+  getUserInfo: async (params) => {
+    // 实现略
+  },
+  getPlayList: async (params) => {
+    // 实现略
+  }
+});
+
+// 页面卸载或服务不再需要时调用
+window.addEventListener('beforeunload', () => {
+  cleanup(); // 移除 message 事件监听器
+});
+
+// 或在框架的组件卸载钩子中调用（以 Vue 为例）
+onUnmounted(() => {
+  cleanup();
+});
+```
+
+为什么重要：
+- 防止事件监听器遗留导致的内存泄漏
+- 在单页应用中保证资源的正确释放
+- 避免页面刷新/跳转后重复注册监听带来的问题
+
+---
+
+### 2. 类型安全
 
 使用 TypeScript 并为 API 方法定义明确的类型
 
@@ -372,7 +447,7 @@ const user = await api.getUser<GetUserParams, UserResponse>({ id: '123' });
 
 ---
 
-### 2. 错误处理
+### 3. 错误处理
 
 始终为 API 调用添加错误处理
 
@@ -382,7 +457,7 @@ serve({
     try {
       return await fetchData(params);
     } catch (error) {
-      return { error: error.message };
+      return { error: (error as Error).message };
     }
   }
 });
@@ -390,9 +465,9 @@ serve({
 
 ---
 
-### 3. 资源清理
+### 4. Request 的资源清理
 
-在不需要时及时调用 `destroy()` 清理资源
+在不需要时及时调用 `destroy()` 清理 Request 实例及其资源
 
 ```typescript
 // 组件卸载时
@@ -403,7 +478,7 @@ componentWillUnmount() {
 
 ---
 
-### 4. 超时配置
+### 5. 超时配置
 
 根据实际网络情况合理设置超时时间
 

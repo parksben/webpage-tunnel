@@ -12,20 +12,24 @@ body {
   overflow: hidden;
 }
 
-.chat-section {
-  background: white;
+.chat-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  background: white;
 }
 
 .chat-header {
-  background: #ec4899;
+  background: #667eea;
   color: white;
   padding: 20px;
   font-size: 1.2em;
   font-weight: 600;
   text-align: center;
+}
+
+.chat-header-b {
+  background: #764ba2;
 }
 
 .chat-box {
@@ -56,7 +60,7 @@ body {
 }
 
 .message.sent {
-  background: #ec4899;
+  background: #667eea;
   color: white;
   margin-left: auto;
   text-align: right;
@@ -66,6 +70,13 @@ body {
   background: #e0e0e0;
   color: #333;
   margin-right: auto;
+}
+
+.message.error {
+  background: #ff6b6b;
+  color: white;
+  margin-left: auto;
+  text-align: right;
 }
 
 .message-meta {
@@ -93,12 +104,12 @@ body {
 
 .message-input:focus {
   outline: none;
-  border-color: #ec4899;
+  border-color: #667eea;
 }
 
 .send-btn {
   padding: 12px 30px;
-  background: #ec4899;
+  background: #667eea;
   color: white;
   border: none;
   border-radius: 8px;
@@ -109,11 +120,20 @@ body {
 }
 
 .send-btn:hover {
-  background: #db2777;
+  background: #5568d3;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(236, 72, 153, 0.3);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
 }
 
 .send-btn:active {
   transform: translateY(0);
+}
+
+.send-btn-b {
+  background: #764ba2;
+}
+
+.send-btn-b:hover {
+  background: #653a8c;
+  box-shadow: 0 4px 8px rgba(118, 75, 162, 0.3);
 }

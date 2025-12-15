@@ -14,8 +14,9 @@ function generateId(): string {
 export class Request {
   private server: string;
   private timeout: number;
-  private targetWindow: Window | null = null;
+  private targetWindows: Window[] = [];
   private targetOrigin: string;
+  private targetWindow: Window | undefined;
   private pendingRequests: Map<
     string,
     {
@@ -30,6 +31,7 @@ export class Request {
     this.server = options.server;
     this.timeout = options.timeout || 30000;
     this.targetOrigin = this.extractOrigin(this.server);
+    this.targetWindow = options.targetWindow;
 
     // Setup message listener
     this.handleMessage = this.handleMessage.bind(this);
@@ -66,7 +68,7 @@ export class Request {
         // Try to access parent's origin (will throw if cross-origin)
         const parentOrigin = this.extractOrigin(document.referrer || this.server);
         if (parentOrigin === this.targetOrigin || this.targetOrigin === '*') {
-          this.targetWindow = window.parent;
+          this.targetWindows = [window.parent];
           await this.handshake();
           return;
         }
@@ -76,8 +78,8 @@ export class Request {
     }
 
     // Search for iframe with matching src
-    const iframes = document.querySelectorAll('iframe');
-    for (const iframe of Array.from(iframes)) {
+    const iframes = Array.from(document.querySelectorAll('iframe'));
+    for (const iframe of iframes) {
       if (iframe.src?.startsWith(this.server)) {
         // Check if iframe is already loaded
         const isLoaded = iframe.contentDocument?.readyState === 'complete';
@@ -103,24 +105,29 @@ export class Request {
         await new Promise((resolve) => setTimeout(resolve, 200));
 
         // Get contentWindow
-        this.targetWindow = iframe.contentWindow;
+        const cw = iframe.contentWindow;
 
-        if (!this.targetWindow) {
+        if (!cw) {
           throw new Error('Failed to get iframe contentWindow');
         }
 
-        await this.handshake();
-        return;
+        this.targetWindows.push(cw);
       }
+    }
+    if (this.targetWindows.length > 0) {
+      await this.handshake();
+      return;
     }
     const observer = new MutationObserver(async (mutations) => {
       for (const mutation of mutations) {
         for (const node of Array.from(mutation.addedNodes)) {
           if (node instanceof HTMLIFrameElement && node.src?.startsWith(this.server)) {
-            this.targetWindow = node.contentWindow;
-            observer.disconnect();
+            if (node.contentWindow) {
+              this.targetWindows.push(node.contentWindow);
+            }
+            // Do not disconnect; continue to collect future matching iframes
             await this.handshake();
-            return;
+            // continue scanning for more
           }
         }
       }
@@ -153,19 +160,22 @@ export class Request {
       });
 
       // Send handshake message
-      if (!this.targetWindow) {
+      if (this.targetWindows.length === 0) {
         reject(new Error('Target window is null'));
         return;
       }
 
       try {
-        this.targetWindow.postMessage(
-          {
-            type: 'WEBPAGE_TUNNEL_HANDSHAKE',
-            id,
-          },
-          this.targetOrigin
-        );
+        const targets = this.getTargets();
+        for (const win of targets) {
+          win.postMessage(
+            {
+              type: 'WEBPAGE_TUNNEL_HANDSHAKE',
+              id,
+            },
+            this.targetOrigin
+          );
+        }
       } catch (e) {
         reject(e as Error);
       }
@@ -240,17 +250,36 @@ export class Request {
           timer,
         });
 
-        this.targetWindow?.postMessage(
-          {
-            type: 'WEBPAGE_TUNNEL_REQUEST',
-            id,
-            method,
-            params,
-          },
-          this.targetOrigin
-        );
+        const targets = this.getTargets();
+        for (const win of targets) {
+          try {
+            win.postMessage(
+              {
+                type: 'WEBPAGE_TUNNEL_REQUEST',
+                id,
+                method,
+                params,
+              },
+              this.targetOrigin
+            );
+          } catch (e) {
+            // Ignore individual postMessage errors; continue broadcasting
+          }
+        }
       });
     };
+  }
+
+  /**
+   * Get target windows based on targetWindow configuration
+   */
+  private getTargets(): Window[] {
+    // If specific window specified, use it if it's in our collection
+    if (this.targetWindow) {
+      return this.targetWindows.includes(this.targetWindow) ? [this.targetWindow] : [];
+    }
+    // Default: broadcast to all matching windows
+    return this.targetWindows;
   }
 
   /**
@@ -271,7 +300,7 @@ export class Request {
     }
     this.pendingRequests.clear();
 
-    this.targetWindow = null;
+    this.targetWindows = [];
     this.connected = false;
   }
 }

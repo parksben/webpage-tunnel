@@ -4,7 +4,7 @@ import type { ApiMethods, Message, MessageType } from './types';
  * Expose local APIs to be called by other pages via postMessage
  * @param methods - Object containing API methods to expose
  */
-export function serve(methods: ApiMethods): void {
+export function serve(methods: ApiMethods) {
   const handleMessage = async (event: MessageEvent) => {
     const message = event.data as Message;
 
@@ -60,4 +60,8 @@ export function serve(methods: ApiMethods): void {
   };
 
   window.addEventListener('message', handleMessage);
+
+  return () => {
+    window.removeEventListener('message', handleMessage);
+  };
 }
