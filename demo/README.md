@@ -1,8 +1,8 @@
 # Chat Demo
 
-![Chat Demo](./screenshot.png)
-
 A simple bidirectional chat application demonstrating cross-origin communication between two web pages using `webpage-tunnel`.
+
+![Demo Runtime](./screenshot.png)
 
 ## What This Demo Shows
 
@@ -12,14 +12,16 @@ A simple bidirectional chat application demonstrating cross-origin communication
 
 ## Quick Start
 
-1. Start the demo server:
+1. Download the contents of this directory to local.
+
+2. Run the demo app in your local directory.
 
 ```bash
 node server.js
 ```
 
-2. Open http://localhost:3001 in your browser. You'll see:
+3. Open http://localhost:3001 in your browser. You'll see:
 - **Left side**: User A's chat interface
 - **Right side**: User B's chat interface (embedded via iframe)
 
-3. Type messages in either side and hit "Send" to see real-time communication in action.
+4. Type messages in either side and hit "Send" to see real-time communication in action.
