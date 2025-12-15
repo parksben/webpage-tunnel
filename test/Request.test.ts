@@ -42,7 +42,7 @@ describe('Request', () => {
     request.destroy();
 
     expect(removeEventListenerSpy).toHaveBeenCalledWith('message', expect.any(Function));
-    expect((request as any).targetWindow).toBeNull();
+    expect((request as any).targetWindows).toEqual([]);
     expect((request as any).connected).toBe(false);
   });
 });
