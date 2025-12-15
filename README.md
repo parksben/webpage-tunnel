@@ -369,29 +369,7 @@ try {
 
 Based on the browser's native `postMessage` mechanism, `webpage-tunnel` establishes a secure communication channel between two pages. Through message passing, it implements method invocation and data exchange, ensuring data security and integrity in cross-domain environments.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant B as Page B (Caller)
-    participant A as Page A (Server)
-
-    Note over B: Initialize Request({ server, methods, timeout })
-    B->>A: postMessage: Handshake Request (HANDSHAKE)
-    A-->>B: postMessage: Handshake Acknowledgment (HANDSHAKE_ACK)
-    Note over B,A: Channel established, start API calls
-
-    rect rgb(245, 248, 255)
-    B->>A: postMessage: API Request (REQUEST: method, params, id)
-    A->>A: serve(methods)[method](params)
-    A-->>B: postMessage: API Response (RESPONSE: result | error, id)
-    end
-
-    alt Timeout/Error
-      B->>B: Timeout triggered/Error caught (reject)
-    else Success
-      B->>B: Promise resolve, process response data
-    end
-```
+<img width="956" height="966" alt="Technical Overview" src="https://github.com/user-attachments/assets/b4efe19c-704e-445c-a332-4f29b5da70b0" />
 
 ## Best Practices
 
