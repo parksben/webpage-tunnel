@@ -166,11 +166,11 @@ userApi
   });
 ```
 
-### Demo Project
+### 进阶 Demo
 
-The project includes a complete bidirectional communication demo:
+这个项目展示了如何在 iframe 内外实现完整的双向通信：
 
-[Demo Project](https://github.com/parksben/webpage-tunnel/tree/main/demo)
+[示例项目](https://github.com/parksben/webpage-tunnel/tree/main/demo)
 
 ## API Reference
 
