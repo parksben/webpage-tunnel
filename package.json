@@ -1,7 +1,7 @@
 {
   "name": "webpage-tunnel",
   "version": "1.0.2",
-  "description": "一个浏览器端轻量级框架，用于高效实现 iframe 内嵌网页与宿主页面间的 API 式通信",
+  "description": "A secure and elegant cross-iframe API communication library based on `postMessage`.",
   "main": "dist/webpage-tunnel.cjs.js",
   "module": "dist/webpage-tunnel.esm.js",
   "types": "dist/index.d.ts",
@@ -17,7 +17,7 @@
     "format": "biome format --write .",
     "lint": "biome lint .",
     "check": "biome check --write .",
-    "demo": "npm run build && node demo/server.js",
+    "demo": "node demo/server.js",
     "prepublishOnly": "npm run check && npm run test && npm run build"
   },
   "keywords": [
