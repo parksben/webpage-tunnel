@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>👤 Page A - Chat Demo</title>
+  <link rel="stylesheet" href="chatbot.css">
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <span>👤 Page A <span class="tag">Iframe Page</span></span>
+      <button id="clearBtn" class="clear-btn" title="Clear messages">🗑️ Clear</button>
+    </div>
+    <div id="chatBox" class="chat-box"></div>
+    <div class="input-area">
+      <input 
+        type="text" 
+        id="messageInput" 
+        placeholder="Type a message..." 
+        class="message-input"
+      >
+      <button id="sendBtn" class="send-btn">Send</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { setupChat, handleSendMessage, setupCleanup } from './utils.js';
+
+    const chatBox = document.getElementById('chatBox');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    // Setup chat with Page B
+    const { api, parentApi, cleanup } = setupChat({
+      chatBox,
+      targetPage: 'http://localhost:5000/b.html',
+    });
+
+    // Send message handler
+    const sendMessage = () => handleSendMessage({ 
+      chatBox, 
+      messageInput, 
+      api,
+      parentApi,
+      pageName: 'Page A'
+    });
+
+    // Clear messages function
+    const clearBtn = document.getElementById('clearBtn');
+    clearBtn.addEventListener('click', () => {
+      chatBox.innerHTML = '';
+    });
+
+    // Event listeners
+    sendBtn.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+
+    // Cleanup on page unload
+    setupCleanup(cleanup, api, parentApi);
+  </script>
+</body>
+</html>

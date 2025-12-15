@@ -14,6 +14,7 @@ function generateId(): string {
 export class Request {
   private server: string;
   private timeout: number;
+  private connectionTimeout: number;
   private targetWindows: Window[] = [];
   private targetOrigin: string;
   private targetWindow: Window | undefined;
@@ -30,6 +31,7 @@ export class Request {
   constructor(options: RequestOptions) {
     this.server = options.server;
     this.timeout = options.timeout || 30000;
+    this.connectionTimeout = options.connectionTimeout || 5000;
     this.targetOrigin = this.extractOrigin(this.server);
     this.targetWindow = options.targetWindow;
 
@@ -42,8 +44,42 @@ export class Request {
       (this as any)[method] = this.createMethod(method);
     }
 
-    // Setup connection
-    this.setupConnection();
+    // Setup connection with timeout
+    this.setupConnectionWithTimeout();
+  }
+
+  /**
+   * Setup connection with timeout
+   */
+  private async setupConnectionWithTimeout(): Promise<void> {
+    let timeoutId: NodeJS.Timeout | null = null;
+    let timeoutFired = false;
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => {
+        timeoutFired = true;
+        const error = new Error(
+          `Connection timeout after ${this.connectionTimeout}ms. Failed to establish connection with ${this.server}. Please ensure: 1) The target page is loaded, 2) serve() is called on the target page, 3) The target page is accessible from the current context.`
+        );
+        reject(error);
+      }, this.connectionTimeout);
+    });
+
+    try {
+      await Promise.race([this.setupConnection(), timeoutPromise]);
+      // Clear timeout if connection succeeded
+      if (timeoutId && !timeoutFired) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+    } catch (error) {
+      // Clear timeout if connection failed before timeout
+      if (timeoutId && !timeoutFired) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+      throw error;
+    }
   }
 
   /**
@@ -62,22 +98,79 @@ export class Request {
    * Setup connection to target window
    */
   private async setupConnection(): Promise<void> {
-    // Check if current window is in an iframe and parent is the server
+    // Check if current window is in an iframe
     if (window.parent !== window) {
+      // First, check if parent itself is the server (child → parent communication)
       try {
-        // Try to access parent's origin (will throw if cross-origin)
         const parentOrigin = this.extractOrigin(document.referrer || this.server);
-        if (parentOrigin === this.targetOrigin || this.targetOrigin === '*') {
-          this.targetWindows = [window.parent];
-          await this.handshake();
-          return;
+        const serverOrigin = this.extractOrigin(this.server);
+
+        // Check if parent's origin matches server origin
+        if (parentOrigin === serverOrigin || this.targetOrigin === '*') {
+          // Check if parent's URL matches the server URL (not just origin)
+          // by comparing the pathname - must match exactly
+          const serverUrl = new URL(this.server);
+          const parentUrl = new URL(document.referrer || this.server);
+
+          if (serverUrl.pathname === parentUrl.pathname) {
+            this.targetWindows = [window.parent];
+            await this.handshake();
+            return;
+          }
         }
       } catch {
-        // Cross-origin, continue to iframe search
+        // Not same origin with parent, continue to sibling search
       }
+
+      // If parent is not the server, search for sibling iframes in the parent
+      try {
+        // Retry mechanism: wait for sibling iframes to load
+        const maxRetries = 10; // Maximum 10 retries
+        const retryDelay = 100; // Wait 100ms between retries
+
+        for (let retry = 0; retry < maxRetries; retry++) {
+          const parentIframes = window.parent.document.querySelectorAll('iframe');
+
+          // Only clear targetWindows on first attempt
+          if (retry === 0) {
+            this.targetWindows = [];
+          }
+
+          for (const iframe of Array.from(parentIframes)) {
+            // Skip self
+            if (iframe.contentWindow === window) {
+              continue;
+            }
+
+            if (iframe.src?.startsWith(this.server)) {
+              const cw = iframe.contentWindow;
+              if (cw && !this.targetWindows.includes(cw)) {
+                this.targetWindows.push(cw);
+              }
+            }
+          }
+
+          if (this.targetWindows.length > 0) {
+            // Wait a bit to ensure iframe is fully initialized
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            await this.handshake();
+            return;
+          }
+
+          // If not found and not the last retry, wait and try again
+          if (retry < maxRetries - 1) {
+            await new Promise((resolve) => setTimeout(resolve, retryDelay));
+          }
+        }
+      } catch (e) {
+        // Cross-origin parent, cannot access parent's iframes
+      }
+
+      // If we're in an iframe, don't search current document (no iframes inside iframe)
+      return;
     }
 
-    // Search for iframe with matching src
+    // Search for iframe with matching src in current document
     const iframes = Array.from(document.querySelectorAll('iframe'));
     for (const iframe of iframes) {
       if (iframe.src?.startsWith(this.server)) {
@@ -147,7 +240,11 @@ export class Request {
       const id = generateId();
       const timer = window.setTimeout(() => {
         this.pendingRequests.delete(id);
-        reject(new Error('Handshake timeout'));
+        reject(
+          new Error(
+            `Handshake timeout with ${this.server}. The target page may not have called serve() yet, or the connection was blocked.`
+          )
+        );
       }, this.timeout);
 
       this.pendingRequests.set(id, {
@@ -161,7 +258,11 @@ export class Request {
 
       // Send handshake message
       if (this.targetWindows.length === 0) {
-        reject(new Error('Target window is null'));
+        reject(
+          new Error(
+            `No target window found for ${this.server}. Please ensure the target iframe is loaded and accessible.`
+          )
+        );
         return;
       }
 

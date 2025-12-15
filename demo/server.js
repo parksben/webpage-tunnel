@@ -1,7 +1,11 @@
-const http = require('node:http');
-const fs = require('node:fs');
-const path = require('node:path');
-const { exec } = require('node:child_process');
+import http from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
+import { exec } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // MIME types
 const mimeTypes = {
@@ -16,8 +20,8 @@ const mimeTypes = {
 
 // Create static file server
 const server = http.createServer((req, res) => {
-  // Get file path (serve from pages directory)
-  const filePath = path.join(__dirname, 'pages', req.url === '/' ? 'index.html' : req.url);
+  // Get file path (serve from static directory)
+  const filePath = path.join(__dirname, 'static', req.url === '/' ? 'index.html' : req.url);
 
   // Get file extension
   const extname = path.extname(filePath);

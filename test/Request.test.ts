@@ -11,6 +11,7 @@ describe('Request', () => {
       server: 'http://localhost:3000',
       methods: ['getUserInfo', 'getPlayList'],
       timeout: 5000,
+      connectionTimeout: 3000,
     });
 
     expect(request).toBeDefined();
@@ -27,6 +28,29 @@ describe('Request', () => {
     });
 
     expect((request as any).targetOrigin).toBe('http://localhost:3000');
+
+    request.destroy();
+  });
+
+  it('should use default connectionTimeout if not specified', () => {
+    const request = new Request({
+      server: 'http://localhost:3000',
+      methods: ['test'],
+    });
+
+    expect((request as any).connectionTimeout).toBe(5000); // default value
+
+    request.destroy();
+  });
+
+  it('should use custom connectionTimeout if specified', () => {
+    const request = new Request({
+      server: 'http://localhost:3000',
+      methods: ['test'],
+      connectionTimeout: 8000,
+    });
+
+    expect((request as any).connectionTimeout).toBe(8000);
 
     request.destroy();
   });

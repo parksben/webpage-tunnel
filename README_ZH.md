@@ -163,23 +163,15 @@ const userApi = new Request({
 const params: RequestParams = { userId: '123' };
 
 // 调用 API 方法
-userApi
-  .getUserInfo<RequestParams, ApiResponse<UserInfo>>(params)
-  .then(({ data }) => {
-    console.log('User Info:', data);
-  })
-  .catch((error) => {
-    console.error(error);
-  });
-
-userApi
-  .getPlayList<RequestParams, ApiResponse<PlayListItem[]>>(params)
-  .then(({ data }) => {
-    console.log('Play List:', data);
-  })
-  .catch((error) => {
-    console.error(error);
-  });
+try {
+  const userInfo = await userApi.getUserInfo<RequestParams, ApiResponse<UserInfo>>(params);
+  console.log('用户信息:', userInfo.data);
+  
+  const playList = await userApi.getPlayList<RequestParams, ApiResponse<PlayListItem[]>>(params);
+  console.log('播放列表:', playList.data);
+} catch (error) {
+  console.error('API 调用失败:', error.message);
+}
   
 // 页面卸载时销毁 Request 实例
 window.addEventListener('beforeunload', () => {
@@ -262,6 +254,7 @@ serve({
 | `options.server` | `string` | ✅ | - | 目标页面的 URL（必须包含协议和域名） |
 | `options.methods` | `string[]` | ✅ | - | 要调用的 API 方法名列表 |
 | `options.timeout` | `number` | ❌ | `30000` | 请求超时时间（毫秒） |
+| `options.connectionTimeout` | `number` | ❌ | `5000` | 连接建立的最大超时时间（毫秒） |
 | `options.targetWindow` | `Window` | ❌ | - | 指定目标窗口（用于多个匹配 iframe 的场景）。若不指定，则广播到所有匹配的 iframe |
 
 **实例方法：**
@@ -270,7 +263,7 @@ Request 实例会根据 `options.methods` 动态添加对应的方法。每个�
 
 | 方法 | 说明 |
 |------|------|
-| `[methodName]<P, R>(params?: P): Promise<R>` | 调用远程 API，支持泛型指定参数和返回值类型 |
+| `[methodName]<P, R>(params?: P): Promise<R>` | 调用远程 API，支持泛型指定参数和返回值类型。如果连接尚未建立，会自动等待连接成功 |
 | `destroy(): void` | 销毁实例，清理资源和事件监听器 |
 
 **示例：**
@@ -282,7 +275,8 @@ import { Request } from 'webpage-tunnel';
 const api = new Request({
   server: 'https://example.com/page',
   methods: ['getUser', 'updateUser', 'deleteUser'],
-  timeout: 5000
+  timeout: 5000,
+  connectionTimeout: 3000  // 最多等待 3 秒连接
 });
 
 // 创建请求实例（指定特定的 iframe）
@@ -334,10 +328,11 @@ Request 构造函数配置选项。
 
 ```typescript
 interface RequestOptions {
-  server: string;        // 目标页面 URL
-  methods: string[];     // API 方法名列表
-  timeout?: number;      // 超时时间（毫秒）
-  targetWindow?: Window; // 指定目标窗口（可选）
+  server: string;             // 目标页面 URL
+  methods: string[];          // API 方法名列表
+  timeout?: number;           // 请求超时时间（毫秒，默认：30000）
+  connectionTimeout?: number; // 连接超时时间（毫秒，默认：5000）
+  targetWindow?: Window;      // 指定目标窗口（可选）
 }
 ```
 
@@ -368,7 +363,9 @@ interface Message<T = any> {
 
 | 错误信息 | 说明 | 解决方案 |
 |----------|------|----------|
-| `Handshake timeout` | 与目标页面建立连接超时 | 检查目标页面是否正确加载，是否调用了 `serve()` |
+| `Connection timeout after [time]ms` | 连接建立超时 | 增加 `connectionTimeout` 或确保目标页面正确加载 |
+| `Handshake timeout with [server]` | 与目标页面握手超时 | 检查目标页面是否正确调用了 `serve()` |
+| `No target window found for [server]` | 未找到目标 iframe 或无法访问 | 确保 iframe 已加载且可访问 |
 | `Request timeout: [method]` | API 调用超时 | 增加 `timeout` 配置或优化服务端响应速度 |
 | `Method [method] not found` | 调用的方法在服务端未注册 | 确认服务端 `serve()` 中已定义该方法 |
 | `Request cancelled` | 请求被取消（通常因为调用了 `destroy()`） | 正常情况，无需处理 |

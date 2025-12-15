@@ -173,23 +173,15 @@ const userApi = new Request({
 const params: RequestParams = { userId: '123' };
 
 // Call API methods
-userApi
-  .getUserInfo<RequestParams, ApiResponse<UserInfo>>(params)
-  .then(({ data }) => {
-    console.log('User Info:', data);
-  })
-  .catch((error) => {
-    console.error(error);
-  });
-
-userApi
-  .getPlayList<RequestParams, ApiResponse<PlayListItem[]>>(params)
-  .then(({ data }) => {
-    console.log('Play List:', data);
-  })
-  .catch((error) => {
-    console.error(error);
-  });
+try {
+  const userInfo = await userApi.getUserInfo<RequestParams, ApiResponse<UserInfo>>(params);
+  console.log('User Info:', userInfo.data);
+  
+  const playList = await userApi.getPlayList<RequestParams, ApiResponse<PlayListItem[]>>(params);
+  console.log('Play List:', playList.data);
+} catch (error) {
+  console.error('API call failed:', error.message);
+}
   
 // Destroy Request instance when page unloads
 window.addEventListener('beforeunload', () => {
@@ -289,6 +281,7 @@ Create an API client to call remote page methods.
 | `options.server`    | `string`   | ✅        | -       | Target page URL (must include protocol and domain)                                           |
 | `options.methods`   | `string[]` | ✅        | -       | List of API method names to call                                                             |
 | `options.timeout`   | `number`   | ❌        | `30000` | Request timeout in milliseconds                                                              |
+| `options.connectionTimeout` | `number` | ❌ | `5000` | Maximum time (in milliseconds) to wait for connection establishment |
 | `options.targetWindow` | `Window`   | ❌        | -       | Specific target window for multiple matching iframes. If omitted, broadcasts to all matching iframes |
 
 **Instance Methods:**
@@ -297,7 +290,7 @@ Request instances dynamically add methods based on `options.methods`. Each metho
 
 | Method                                       | Description                               |
 | -------------------------------------------- | ----------------------------------------- |
-| `[methodName]<P, R>(params?: P): Promise<R>` | Call remote API with generic type support |
+| `[methodName]<P, R>(params?: P): Promise<R>` | Call remote API with generic type support. Will automatically wait for connection if not yet established |
 | `destroy(): void`                            | Destroy instance and cleanup resources    |
 
 **Example:**
@@ -309,7 +302,8 @@ import { Request } from 'webpage-tunnel';
 const api = new Request({
   server: 'https://example.com/page',
   methods: ['getUser', 'updateUser', 'deleteUser'],
-  timeout: 5000
+  timeout: 5000,
+  connectionTimeout: 3000  // Wait up to 3s for connection
 });
 
 // Create Request instance targeting a specific iframe
@@ -361,10 +355,11 @@ Request constructor configuration options.
 
 ```typescript
 interface RequestOptions {
-  server: string;        // Target page URL
-  methods: string[];     // List of API method names
-  timeout?: number;      // Timeout in milliseconds
-  targetWindow?: Window; // Specific target window (optional)
+  server: string;             // Target page URL
+  methods: string[];          // List of API method names
+  timeout?: number;           // Request timeout in milliseconds (default: 30000)
+  connectionTimeout?: number; // Connection timeout in milliseconds (default: 5000)
+  targetWindow?: Window;      // Specific target window (optional)
 }
 ```
 
@@ -395,7 +390,9 @@ All methods called through Request return Promises, so you can use `try-catch` o
 
 | Error Message               | Description                                        | Solution                                                 |
 | --------------------------- | -------------------------------------------------- | -------------------------------------------------------- |
-| `Handshake timeout`         | Connection timeout with target page                | Check if target page loads correctly and calls `serve()` |
+| `Connection timeout after [time]ms` | Connection establishment timeout       | Increase `connectionTimeout` or ensure target page loads correctly |
+| `Handshake timeout with [server]` | Handshake with target page timeout     | Check if target page calls `serve()` correctly           |
+| `No target window found for [server]` | Target iframe not found or inaccessible | Ensure iframe is loaded and accessible                |
 | `Request timeout: [method]` | API call timeout                                   | Increase `timeout` or optimize server response           |
 | `Method [method] not found` | Called method not registered on server             | Confirm method is defined in `serve()`                   |
 | `Request cancelled`         | Request cancelled (usually by calling `destroy()`) | Normal behavior, no action needed                        |

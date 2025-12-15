@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🌐 Webpage Tunnel Demo - Message Center</title>
+    <link rel="stylesheet" href="host.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="iframe-container">
+        <div class="iframe-wrapper">
+          <iframe src="./a.html" title="Page A" id="iframeA"></iframe>
+        </div>
+        <div class="iframe-wrapper">
+          <iframe src="./b.html" title="Page B" id="iframeB"></iframe>
+        </div>
+      </div>
+
+      <div class="message-center">
+        <div class="message-center-header">
+          <span>📡 Message Center <span class="tag">Host Page</span></span>
+          <button id="clearLogsBtn" class="clear-btn" title="Clear logs">🗑️ Clear</button>
+        </div>
+        <div id="logBox" class="message-center-box"></div>
+        <div class="broadcast-area">
+          <input
+            type="text"
+            id="broadcastInput"
+            placeholder="Type a message to broadcast to all pages..."
+            class="broadcast-input"
+          />
+          <button id="broadcastBtn" class="broadcast-btn">Broadcast</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { serve, Request } from "./webpage-tunnel.js";
+
+      const logBox = document.getElementById("logBox");
+      const broadcastInput = document.getElementById("broadcastInput");
+      const broadcastBtn = document.getElementById("broadcastBtn");
+      const iframeA = document.getElementById("iframeA");
+      const iframeB = document.getElementById("iframeB");
+
+      // Add system log
+      function addSystemLog(text, source) {
+        const logDiv = document.createElement("div");
+        logDiv.className = "system-log";
+
+        const textDiv = document.createElement("div");
+        textDiv.textContent = `[${source}] ${text}`;
+
+        const metaDiv = document.createElement("div");
+        metaDiv.className = "log-meta";
+        metaDiv.textContent = new Date().toLocaleTimeString();
+
+        logDiv.appendChild(textDiv);
+        logDiv.appendChild(metaDiv);
+        logBox.appendChild(logDiv);
+
+        // Scroll to bottom
+        logBox.scrollTop = logBox.scrollHeight;
+      }
+
+      // Expose API to receive messages from iframe pages
+      const cleanup = serve({
+        logMessage: ({ message, from }) => {
+          addSystemLog(message, from);
+          return { success: true, timestamp: Date.now() };
+        },
+      });
+
+      const apiA = new Request({
+        server: "http://localhost:5000/a.html",
+        methods: ["receiveSystemMessage"],
+        targetWindow: iframeA.contentWindow,
+        timeout: 10000,
+        connectionTimeout: 10000,
+      });
+      addSystemLog("Page A connected", "System");
+
+      const apiB = new Request({
+        server: "http://localhost:5000/b.html",
+        methods: ["receiveSystemMessage"],
+        targetWindow: iframeB.contentWindow,
+        timeout: 10000,
+        connectionTimeout: 10000,
+      });
+      addSystemLog("Page B connected", "System");
+
+      // Broadcast message to all pages
+      async function broadcastMessage() {
+        const message = broadcastInput.value.trim();
+
+        if (!message) {
+          return;
+        }
+
+        addSystemLog(`Broadcasting: "${message}"`, "Message Center");
+        broadcastInput.value = "";
+
+        // Send to Page A
+        try {
+          await apiA.receiveSystemMessage({ message });
+        } catch (error) {
+          addSystemLog(`Failed to send to Page A: ${error.message}`, "Error");
+        }
+
+        // Send to Page B
+        try {
+          await apiB.receiveSystemMessage({ message });
+        } catch (error) {
+          addSystemLog(`Failed to send to Page B: ${error.message}`, "Error");
+        }
+      }
+
+      // Clear logs function
+      function clearLogs() {
+        logBox.innerHTML = '';
+        addSystemLog('Logs cleared', 'System');
+      }
+
+      // Event listeners
+      broadcastBtn.addEventListener("click", broadcastMessage);
+      broadcastInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          broadcastMessage();
+        }
+      });
+      document.getElementById('clearLogsBtn').addEventListener('click', clearLogs);
+
+      // Cleanup on page unload
+      window.addEventListener("beforeunload", () => {
+        cleanup();
+        apiA.destroy();
+        apiB.destroy();
+      });
+
+      // Initial log
+      addSystemLog("Message Center initialized", "System");
+    </script>
+  </body>
+</html>

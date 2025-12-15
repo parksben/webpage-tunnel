@@ -42,6 +42,11 @@ export interface RequestOptions {
   methods: string[];
   timeout?: number;
   /**
+   * Maximum time (in milliseconds) to wait for connection establishment.
+   * Default: 5000ms
+   */
+  connectionTimeout?: number;
+  /**
    * Optional target window for multiple matching iframes.
    * If specified, only this specific window will be targeted.
    * If omitted, all matching iframes will receive the request (broadcast).
