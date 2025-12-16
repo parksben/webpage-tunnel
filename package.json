@@ -1,13 +1,17 @@
 {
   "name": "webpage-tunnel",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "A secure and elegant cross-iframe API communication library based on `postMessage`.",
   "main": "dist/webpage-tunnel.cjs.js",
   "module": "dist/webpage-tunnel.esm.js",
   "types": "dist/index.d.ts",
   "unpkg": "dist/webpage-tunnel.umd.js",
   "jsdelivr": "dist/webpage-tunnel.umd.js",
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
