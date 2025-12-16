@@ -65,8 +65,9 @@ body {
   background: rgba(175, 184, 193, 0.2);
   padding: 0.3em 0.6em;
   border-radius: 6px;
-  font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
-  font-size: 85%;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    monospace;
+  font-size: 100%;
   color: #24292f;
 }
 

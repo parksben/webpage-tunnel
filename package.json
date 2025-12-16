@@ -7,11 +7,7 @@
   "types": "dist/index.d.ts",
   "unpkg": "dist/webpage-tunnel.umd.js",
   "jsdelivr": "dist/webpage-tunnel.umd.js",
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
+  "files": ["dist", "README.md", "LICENSE"],
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
