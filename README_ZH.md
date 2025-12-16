@@ -24,7 +24,9 @@
 
 # Webpage Tunnel
 
-一个浏览器端轻量级框架，用于安全、高效地实现 iframe 内嵌网页与宿主页面间的 API 式通信。
+> 一个基于 `postMessage` 的安全优雅的跨 iframe API 通信库。
+
+`webpage-tunnel` 实现了父页面和 iframe 之间无缝、类型安全的 API 调用，消除了处理 `postMessage` 协议的复杂性。只需几行代码，即可在页面之间建立通信通道。
 
 ## 适用场景
 
