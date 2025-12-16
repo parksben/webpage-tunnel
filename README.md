@@ -34,18 +34,49 @@
 - 🔗 **Micro Frontends**: Communication between micro-applications
 - 📦 **Third-party Integration**: Secure data exchange with embedded third-party pages
 - 🎨 **Visual Editors**: Communication between canvas and preview iframes
-- 💬 **Chat Systems**: Real-time messaging between parent and iframe chat windows
-- 🎮 **Game Embedding**: API calls between game containers and game iframes
 
 ## Features
 
 - ✨ **Simple API**: Intuitive `serve()` and `Request` API design
 - 🔒 **Type Safe**: Full TypeScript support with complete type inference
-- ⚡ **High Performance**: Lightweight with no dependencies (~2KB gzipped)
+- ⚡ **High Performance**: Lightweight design (~2KB gzipped)
 - 🎯 **Promise-based**: All API calls return Promises
 - 🔧 **Error Handling**: Built-in timeout and error handling
 - 🌐 **Cross-domain Support**: Secure communication across different domains
 - 📦 **Multiple Formats**: Supports UMD, ESM, and CJS
+
+## Demo
+
+<https://webpage-tunnel.parksben.xyz>
+
+## Table of Contents
+
+- [Webpage Tunnel](#webpage-tunnel)
+  - [Use Cases](#use-cases)
+  - [Features](#features)
+  - [Demo](#demo)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+  - [Quickstart](#quickstart)
+    - [1. Embed Page](#1-embed-page)
+    - [2. Expose Page API](#2-expose-page-api)
+    - [3. Call Page API](#3-call-page-api)
+  - [API Reference](#api-reference)
+    - [serve(methods)](#servemethods)
+    - [Request](#request)
+    - [Type Definitions](#type-definitions)
+      - [`ApiHandler<P, R>`](#apihandlerp-r)
+      - [`RequestOptions`](#requestoptions)
+      - [`Message<T>`](#messaget)
+    - [Error Handling](#error-handling)
+  - [Technical Overview](#technical-overview)
+  - [Best Practices](#best-practices)
+    - [1. Resource Cleanup with serve()](#1-resource-cleanup-with-serve)
+    - [2. Type Safety](#2-type-safety)
+    - [3. Error Handling](#3-error-handling)
+    - [4. Resource Cleanup in Request](#4-resource-cleanup-in-request)
+    - [5. Timeout Configuration](#5-timeout-configuration)
+  - [License](#license)
 
 ## Installation
 
@@ -76,7 +107,7 @@ import { serve, Request } from 'https://unpkg.com/webpage-tunnel/dist/webpage-tu
 </script>
 ```
 
-## Quick Start
+## Quickstart
 
 ### 1. Embed Page
 
@@ -188,12 +219,6 @@ window.addEventListener('beforeunload', () => {
   userApi.destroy();
 });
 ```
-
-### Demo Project
-
-The project includes a complete bidirectional communication demo:
-
-[Demo Project](https://github.com/parksben/webpage-tunnel/tree/main/demo)
 
 ## API Reference
 

@@ -11,7 +11,7 @@ function generateId(): string {
 /**
  * Request client for calling APIs exposed by other pages
  */
-export class Request {
+class RequestBase<T extends string = string> {
   private server: string;
   private timeout: number;
   private connectionTimeout: number;
@@ -28,7 +28,7 @@ export class Request {
   > = new Map();
   private connected = false;
 
-  constructor(options: RequestOptions) {
+  constructor(options: RequestOptions<T>) {
     this.server = options.server;
     this.timeout = options.timeout || 30000;
     this.connectionTimeout = options.connectionTimeout || 5000;
@@ -405,3 +405,8 @@ export class Request {
     this.connected = false;
   }
 }
+
+export type Request<T extends string = string> = RequestBase<T> & Record<T, RequestMethod>;
+export const Request = RequestBase as {
+  new <T extends string = string>(options: RequestOptions<T>): Request<T>;
+};

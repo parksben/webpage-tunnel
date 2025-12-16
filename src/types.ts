@@ -37,9 +37,9 @@ export type ApiMethods = Record<string, ApiHandler>;
 /**
  * Request configuration options
  */
-export interface RequestOptions {
+export interface RequestOptions<T extends string = string> {
   server: string;
-  methods: string[];
+  methods: T[];
   timeout?: number;
   /**
    * Maximum time (in milliseconds) to wait for connection establishment.

@@ -1,10 +1,8 @@
 # Webpage Tunnel Demo
 
-English | [中文文档](./README_ZH.md)
+English | [简体中文](./README_ZH.md)
 
-![Demo Screenshot](./screenshot.png)
-
-## Main Features of This Demo
+## Main Features
 
 This demo demonstrates a **real-time chat system** with three interconnected pages:
 
@@ -18,7 +16,7 @@ Key features:
 - Parent-to-child communication (host broadcasts to iframes)
 - Child-to-parent communication (iframes log messages to host)
 
-## How to Run This Project
+## How to Run This Demo
 
 1. Download all contents of this directory to your local machine
 

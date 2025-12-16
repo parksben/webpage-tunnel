@@ -25,6 +25,7 @@
   </div>
 
   <script type="module">
+    import { HOST_ORIGIN } from './constant.js';
     import { setupChat, handleSendMessage, setupCleanup } from './utils.js';
 
     const chatBox = document.getElementById('chatBox');
@@ -34,7 +35,7 @@
     // Setup chat with Page B
     const { api, parentApi, cleanup } = setupChat({
       chatBox,
-      targetPage: 'http://localhost:5000/b.html',
+      targetPage: `${HOST_ORIGIN}/b.html`,
     });
 
     // Send message handler

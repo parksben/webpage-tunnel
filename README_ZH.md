@@ -28,14 +28,52 @@
 
 ## 适用场景
 
-* 需要在两个独立域名的网页间实现安全的数据交换和功能调用
-* 希望通过简单的 API 接口封装复杂的跨页面通信逻辑
+- 🔗 **微前端**：微应用之间的通信
+- 📦 **第三方集成**：与嵌入的第三方页面进行安全的数据交换
+- 🎨 **可视化编辑器**：画布与预览 iframe 之间的通信
 
 ## 功能特性
 
-* 网页即服务：通过工厂函数 `serve()` 可将网页中的功能、逻辑封装为供其他页面调用的 API
-* API 调用：通过框架提供的 `Request` 工具类，可快速实现对网页 API 的快速调用
-* 双向通信：支持两个页面相互调用对方的 API，实现双向通信
+- ✨ **简单易用**：直观的 `serve()` 和 `Request` API 设计
+- � **类型安全**：完整的 TypeScript 支持和类型推导
+- ⚡ **高性能**：轻量级设计（gzip 后约 2KB）
+- 🎯 **基于 Promise**：所有 API 调用均返回 Promise
+- 🔧 **错误处理**：内置超时和错误处理机制
+- 🌐 **跨域支持**：支持不同域名间的安全通信
+- 📦 **多种格式**：支持 UMD、ESM 和 CJS
+
+## Demo
+
+<https://webpage-tunnel.parksben.xyz>
+
+## 目录
+
+- [Webpage Tunnel](#webpage-tunnel)
+  - [适用场景](#适用场景)
+  - [功能特性](#功能特性)
+  - [Demo](#demo)
+  - [目录](#目录)
+  - [安装](#安装)
+  - [快速开始](#快速开始)
+    - [1. 嵌入网页](#1-嵌入网页)
+    - [2. 封装网页 API](#2-封装网页-api)
+    - [3. 调用网页 API](#3-调用网页-api)
+  - [API 参考](#api-参考)
+    - [serve(methods)](#servemethods)
+    - [new Request(options)](#new-requestoptions)
+    - [类型定义](#类型定义)
+      - [`ApiHandler<P, R>`](#apihandlerp-r)
+      - [`RequestOptions`](#requestoptions)
+      - [`Message<T>`](#messaget)
+    - [错误处理](#错误处理)
+  - [技术原理](#技术原理)
+  - [最佳实践](#最佳实践)
+    - [1. 使用 serve() 的资源清理](#1-使用-serve-的资源清理)
+    - [2. 类型安全](#2-类型安全)
+    - [3. 错误处理](#3-错误处理)
+    - [4. Request 的资源清理](#4-request-的资源清理)
+    - [5. 超时配置](#5-超时配置)
+  - [License](#license)
 
 ## 安装
 
@@ -178,12 +216,6 @@ window.addEventListener('beforeunload', () => {
   userApi.destroy();
 });
 ```
-
-### 进阶 Demo
-
-这个项目展示了如何在 iframe 内外实现完整的双向通信：
-
-[示例项目](https://github.com/parksben/webpage-tunnel/tree/main/demo)
 
 ## API 参考
 

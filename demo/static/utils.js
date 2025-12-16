@@ -1,3 +1,4 @@
+import { HOST_ORIGIN } from './constant.js';
 import { Request, serve } from './webpage-tunnel.js';
 
 /**
@@ -59,7 +60,7 @@ export function setupChat({ chatBox, targetPage }) {
 
   // Create Request instance for parent page communication
   const parentApi = new Request({
-    server: 'http://localhost:5000/',
+    server: `${HOST_ORIGIN}/`,
     methods: ['logMessage'],
     timeout: 10000,
     connectionTimeout: 10000,

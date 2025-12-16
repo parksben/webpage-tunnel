@@ -3,11 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🌐 Webpage Tunnel Demo - Message Center</title>
+    <title>Webpage Tunnel Demo - Message Center</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>" />
     <link rel="stylesheet" href="host.css" />
   </head>
   <body>
     <div class="container">
+      <header class="project-header">
+        <div class="header-content">
+          <h1><a href="https://github.com/parksben/webpage-tunnel" target="_blank" class="project-link">Webpage Tunnel</a> Demo</h1>
+          <p><code><a href="https://github.com/parksben/webpage-tunnel" target="_blank" class="project-link">Webpage Tunnel</a></code> is a secure and elegant cross-iframe API communication library based on postMessage. (<a href="https://github.com/parksben/webpage-tunnel/tree/main/demo" target="_blank" class="project-link">Demo Source</a>)</p>
+        </div>
+        <div class="header-links">
+          <a href="https://github.com/parksben/webpage-tunnel" target="_blank" class="github-link">
+            <img src="https://img.shields.io/github/stars/parksben/webpage-tunnel?style=social" alt="GitHub stars" />
+          </a>
+        </div>
+      </header>
+
       <div class="iframe-container">
         <div class="iframe-wrapper">
           <iframe src="./a.html" title="Page A" id="iframeA"></iframe>
@@ -36,6 +49,7 @@
     </div>
 
     <script type="module">
+      import { HOST_ORIGIN } from './constant.js';
       import { serve, Request } from "./webpage-tunnel.js";
 
       const logBox = document.getElementById("logBox");
@@ -73,7 +87,7 @@
       });
 
       const apiA = new Request({
-        server: "http://localhost:5000/a.html",
+        server: `${HOST_ORIGIN}/a.html`,
         methods: ["receiveSystemMessage"],
         targetWindow: iframeA.contentWindow,
         timeout: 10000,
@@ -82,7 +96,7 @@
       addSystemLog("Page A connected", "System");
 
       const apiB = new Request({
-        server: "http://localhost:5000/b.html",
+        server: `${HOST_ORIGIN}/b.html`,
         methods: ["receiveSystemMessage"],
         targetWindow: iframeB.contentWindow,
         timeout: 10000,
